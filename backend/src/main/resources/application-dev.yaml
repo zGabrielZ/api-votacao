@@ -12,7 +12,19 @@
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: dev
+    baseline-on-migrate: true
+
 server:
   port: 8080
   servlet:
     context-path: '/api'
+
+logging:
+  level:
+    br.com.gabrielferreira.votacao: DEBUG
+    org:
+      flywaydb: INFO
