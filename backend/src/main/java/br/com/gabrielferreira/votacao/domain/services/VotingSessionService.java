@@ -2,17 +2,18 @@ package br.com.gabrielferreira.votacao.domain.services;
 
 import br.com.gabrielferreira.votacao.domain.entities.AgendaEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
-import br.com.gabrielferreira.votacao.domain.exceptions.AgendaNotFoundException;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
 import br.com.gabrielferreira.votacao.domain.exceptions.VotingSessionNotFoundException;
 import br.com.gabrielferreira.votacao.domain.repositories.VotingSessionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VotingSessionService {
@@ -23,28 +24,26 @@ public class VotingSessionService {
 
     @Transactional
     public VotingSessionEntity create(VotingSessionEntity entity) {
+        log.info("Creating voting session: {}", entity);
         validateVotingSessionDates(entity.getVotingStartTime(),  entity.getVotingEndTime());
-        AgendaEntity agendaEntity = findAgendaById(entity.getAgenda().getIdExternalUuid());
+        AgendaEntity agendaEntity = agendaService.findById(entity.getAgenda().getIdExternalUuid());
         entity.setAgenda(agendaEntity);
-        return repository.save(entity);
+        entity = repository.save(entity);
+        log.info("Created voting session: {}", entity);
+        return entity;
     }
 
     public VotingSessionEntity findById(UUID id) {
-        return repository.findByIdExternalUuid(id)
+        log.info("Finding voting session by id: {}", id);
+        VotingSessionEntity votingSessionEntity = repository.findByIdExternalUuid(id)
                 .orElseThrow(() -> new VotingSessionNotFoundException(id));
+        log.info("Found voting session: {}", votingSessionEntity);
+        return votingSessionEntity;
     }
 
     private void validateVotingSessionDates(OffsetDateTime start, OffsetDateTime end) {
         if (!end.isAfter(start)) {
             throw new BusinessException("Voting session end time must be after start time");
-        }
-    }
-
-    private AgendaEntity findAgendaById(UUID id) {
-        try {
-            return agendaService.findById(id);
-        } catch (AgendaNotFoundException e) {
-            throw new BusinessException(e.getMessage());
         }
     }
 }

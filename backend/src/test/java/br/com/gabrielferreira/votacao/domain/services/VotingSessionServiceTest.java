@@ -142,7 +142,7 @@ class VotingSessionServiceTest {
         when(agendaService.findById(votingSessionEntity.getAgenda().getIdExternalUuid()))
                 .thenThrow(new AgendaNotFoundException(agendaEntity.getIdExternalUuid()));
 
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(votingSessionEntity));
+        AgendaNotFoundException ex = assertThrows(AgendaNotFoundException.class, () -> service.create(votingSessionEntity));
         assertTrue(ex.getMessage().contains("Agenda not found with ID"));
     }
 }

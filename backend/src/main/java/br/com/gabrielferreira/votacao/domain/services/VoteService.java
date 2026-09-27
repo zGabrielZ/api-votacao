@@ -29,6 +29,7 @@ public class VoteService {
 
     @Transactional
     public VoteEntity create(VoteEntity voteEntity) {
+        log.info("Creating vote for voting session: {}", voteEntity.getVotingSession().getIdExternalUuid());
         VotingSessionEntity votingSession = votingSessionService.findById(voteEntity.getVotingSession().getIdExternalUuid());
         voteEntity.setVotingSession(votingSession);
 
@@ -38,7 +39,9 @@ public class VoteService {
         validateVotingSessionIsOpen(votingSession);
         validateAssociateHasNotAlreadyVoted(votingSession, associate);
 
-        return voteRepository.save(voteEntity);
+        voteEntity = voteRepository.save(voteEntity);
+        log.info("Created vote for voting session: {}", voteEntity);
+        return voteEntity;
     }
 
     private AssociateEntity findByAssociate(UUID associateId) {
