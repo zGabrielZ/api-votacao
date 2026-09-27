@@ -22,7 +22,9 @@ import java.util.UUID;
 public class VoteService {
 
     private final VoteRepository voteRepository;
+
     private final VotingSessionService votingSessionService;
+
     private final AssociateService associateService;
 
     @Transactional

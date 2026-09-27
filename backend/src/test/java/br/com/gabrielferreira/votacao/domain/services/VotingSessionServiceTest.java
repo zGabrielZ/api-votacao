@@ -5,6 +5,7 @@ import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
 import br.com.gabrielferreira.votacao.domain.enums.VotingSessionStatus;
 import br.com.gabrielferreira.votacao.domain.exceptions.AgendaNotFoundException;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
+import br.com.gabrielferreira.votacao.domain.exceptions.VotingSessionNotFoundException;
 import br.com.gabrielferreira.votacao.domain.repositories.VotingSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -100,6 +102,42 @@ class VotingSessionServiceTest {
 
     @Test
     @Order(3)
+    void givenVotingSessionExistsWhenFindByIdThenReturn() {
+        UUID votingSessionId = UUID.fromString("123e4567-e89b-12d3-a456-426614174111");
+        VotingSessionEntity saved = VotingSessionEntity.builder()
+                .id(2L)
+                .idExternalUuid(votingSessionId)
+                .votingStartTime(votingSessionEntity.getVotingStartTime())
+                .votingEndTime(votingSessionEntity.getVotingEndTime())
+                .agenda(agendaEntity)
+                .status(VotingSessionStatus.OPEN)
+                .build();
+
+        when(repository.findByIdExternalUuid(votingSessionId))
+                .thenReturn(Optional.of(saved));
+
+        VotingSessionEntity found = service.findById(votingSessionId);
+
+        assertNotNull(found);
+        assertEquals(votingSessionId, found.getIdExternalUuid());
+        assertEquals(VotingSessionStatus.OPEN, found.getStatus());
+        verify(repository).findByIdExternalUuid(votingSessionId);
+    }
+
+    @Test
+    @Order(4)
+    void givenVotingSessionNotFoundWhenFindByIdThenThrow() {
+        UUID votingSessionId = UUID.fromString("123e4567-e89b-12d3-a456-426614174222");
+        when(repository.findByIdExternalUuid(votingSessionId))
+                .thenReturn(Optional.empty());
+
+        VotingSessionNotFoundException ex = assertThrows(VotingSessionNotFoundException.class, () -> service.findById(votingSessionId));
+
+        assertTrue(ex.getMessage().contains("Voting session not found with ID"));
+    }
+
+    @Test
+    @Order(5)
     void givenAgendaNotFoundWhenCreateThenThrow() {
         when(agendaService.findById(votingSessionEntity.getAgenda().getIdExternalUuid()))
                 .thenThrow(new AgendaNotFoundException(agendaEntity.getIdExternalUuid()));
