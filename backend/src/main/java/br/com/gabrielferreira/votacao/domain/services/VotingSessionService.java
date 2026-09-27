@@ -4,6 +4,7 @@ import br.com.gabrielferreira.votacao.domain.entities.AgendaEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
 import br.com.gabrielferreira.votacao.domain.exceptions.AgendaNotFoundException;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
+import br.com.gabrielferreira.votacao.domain.exceptions.VotingSessionNotFoundException;
 import br.com.gabrielferreira.votacao.domain.repositories.VotingSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,11 @@ public class VotingSessionService {
         AgendaEntity agendaEntity = findAgendaById(entity.getAgenda().getIdExternalUuid());
         entity.setAgenda(agendaEntity);
         return repository.save(entity);
+    }
+
+    public VotingSessionEntity findById(UUID id) {
+        return repository.findByIdExternalUuid(id)
+                .orElseThrow(() -> new VotingSessionNotFoundException(id));
     }
 
     private void validateVotingSessionDates(OffsetDateTime start, OffsetDateTime end) {

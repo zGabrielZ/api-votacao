@@ -1,18 +1,8 @@
 package br.com.gabrielferreira.votacao.domain.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import br.com.gabrielferreira.votacao.domain.enums.VoteOption;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -22,32 +12,38 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "TB_AGENDA")
+@Table(name = "TB_VOTE",
+        uniqueConstraints = @UniqueConstraint(name = "tb_vote_voting_session_unique", columnNames = {"ID_VOTING_SESSION", "ID_ASSOCIATE"}))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class AgendaEntity implements Serializable {
+public class VoteEntity implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = -5493420839616237341L;
+    private static final long serialVersionUID = -3552069673041396679L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
     @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "ID_EXTERNAL_UUID", nullable = false, unique = true, updatable = false)
     private UUID idExternalUuid;
 
-    @Column(name = "TITLE", nullable = false)
-    private String title;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_VOTING_SESSION", nullable = false)
+    private VotingSessionEntity votingSession;
 
-    @Column(name = "DESCRIPTION")
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_ASSOCIATE", nullable = false)
+    private AssociateEntity associate;
+
+    @Column(name = "VOTE_OPTION", nullable = false, length = 10)
+    @Enumerated(EnumType.STRING)
+    private VoteOption voteOption;
 
     @CreationTimestamp
     @Column(name = "CREATED_AT", nullable = false, updatable = false)

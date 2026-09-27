@@ -1,18 +1,7 @@
 package br.com.gabrielferreira.votacao.domain.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -22,32 +11,37 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "TB_AGENDA")
+@Table(name = "TB_ASSOCIATE")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class AgendaEntity implements Serializable {
+public class AssociateEntity implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = -5493420839616237341L;
+    private static final long serialVersionUID = -2707426028850889367L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
     @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "ID_EXTERNAL_UUID", nullable = false, unique = true, updatable = false)
     private UUID idExternalUuid;
 
-    @Column(name = "TITLE", nullable = false)
-    private String title;
+    @Column(name = "NAME", nullable = false)
+    private String name;
 
-    @Column(name = "DESCRIPTION")
-    private String description;
+    @Column(name = "EMAIL", nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "PASSWORD", nullable = false)
+    private String password;
+
+    @Column(name = "DOCUMENT_NUMBER", nullable = false, unique = true)
+    private String documentNumber;
 
     @CreationTimestamp
     @Column(name = "CREATED_AT", nullable = false, updatable = false)
