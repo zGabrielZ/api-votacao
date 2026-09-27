@@ -1,0 +1,23 @@
+﻿spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+  flyway:
+    enabled: false
+
+server:
+  port: 8081
+  servlet:
+    context-path: '/api'
+
+logging:
+  level:
+    br.com.gabrielferreira.votacao: DEBUG

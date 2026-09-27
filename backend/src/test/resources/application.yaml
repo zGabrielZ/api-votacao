@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active:
+      - ${APP_PROFILE:test}
+  jpa:
+    open-in-view: false
+  output:
+    ansi:
+      enabled: ALWAYS
