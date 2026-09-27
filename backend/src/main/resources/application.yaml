@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: votacao-service
+  profiles:
+    active:
+      - ${APP_PROFILE:dev}
+  jpa:
+    open-in-view: false
+  output:
+    ansi:
+      enabled: ALWAYS
