@@ -16,7 +16,6 @@
     enabled: true
     locations:
       - classpath:db/migration
-      - classpath:db/testdata
     schemas: dev
     baseline-on-migrate: true
 

@@ -20,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,10 +44,16 @@ class VotingSessionControllerIntegrationTest {
 
     private UUID agendaIdNotExistent;
 
+    private UUID votingSessionIdExistentClosed;
+
+    private UUID votingSessionIdExistentOpen;
+
     @BeforeEach
     void setUp() {
         agendaIdExistent = UUID.fromString("d22ac18f-809f-4e1f-afcb-d6b639d9ec2d");
         agendaIdNotExistent = UUID.randomUUID();
+        votingSessionIdExistentClosed = UUID.fromString("22200582-0928-4570-8834-0990f3ec52ce");
+        votingSessionIdExistentOpen = UUID.fromString("c86dabe8-656c-4490-a142-e49e406de0a1");
     }
 
     @Test
@@ -85,6 +92,27 @@ class VotingSessionControllerIntegrationTest {
         mockMvc.perform(post(URL, agendaIdNotExistent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(3)
+    @SneakyThrows
+    void givenClosedVotingSessionIdWhenGetResultsThenReturnOk() {
+        mockMvc.perform(get("/v1/voting-sessions/{votingSessionId}/results", votingSessionIdExistentClosed)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.yesVotes").value(2))
+                .andExpect(jsonPath("$.noVotes").value(1))
+                .andExpect(jsonPath("$.totalVotes").value(3));
+    }
+
+    @Test
+    @Order(4)
+    @SneakyThrows
+    void givenOpenVotingSessionIdWhenGetResultsThenReturnBadRequest() {
+        mockMvc.perform(get("/v1/voting-sessions/{votingSessionId}/results", votingSessionIdExistentOpen)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }

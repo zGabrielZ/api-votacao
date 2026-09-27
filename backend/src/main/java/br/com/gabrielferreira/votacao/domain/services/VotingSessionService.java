@@ -2,9 +2,11 @@ package br.com.gabrielferreira.votacao.domain.services;
 
 import br.com.gabrielferreira.votacao.domain.entities.AgendaEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
+import br.com.gabrielferreira.votacao.domain.enums.VotingSessionStatus;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
 import br.com.gabrielferreira.votacao.domain.exceptions.VotingSessionNotFoundException;
 import br.com.gabrielferreira.votacao.domain.repositories.VotingSessionRepository;
+import br.com.gabrielferreira.votacao.domain.repositories.projection.VotingSessionResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,16 @@ public class VotingSessionService {
         entity = repository.save(entity);
         log.info("Created voting session: {}", entity);
         return entity;
+    }
+
+    public VotingSessionResult getVotingSessionResults(UUID id) {
+        VotingSessionEntity votingSessionEntity = findById(id);
+
+        if (!votingSessionEntity.getStatus().equals(VotingSessionStatus.CLOSED)) {
+            throw new BusinessException("Voting session is still open");
+        }
+
+        return repository.findVotingSessionResults(id);
     }
 
     public VotingSessionEntity findById(UUID id) {

@@ -1,7 +1,9 @@
 package br.com.gabrielferreira.votacao.api.mappers.votingsession.output;
 
 import br.com.gabrielferreira.votacao.api.dtos.output.VotingSessionOutputDTO;
+import br.com.gabrielferreira.votacao.api.dtos.output.VotingSessionResultOutputDTO;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
+import br.com.gabrielferreira.votacao.domain.repositories.projection.VotingSessionResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -14,4 +16,6 @@ public interface VotingSessionOutputMapper {
     @Mapping(source = "idExternalUuid", target = "id")
     @Mapping(source = "status", target = "votingStatus")
     VotingSessionOutputDTO toVotingSessionOutputDTO(VotingSessionEntity entity);
+
+    VotingSessionResultOutputDTO toVotingSessionResultOutputDTO(VotingSessionResult result);
 }

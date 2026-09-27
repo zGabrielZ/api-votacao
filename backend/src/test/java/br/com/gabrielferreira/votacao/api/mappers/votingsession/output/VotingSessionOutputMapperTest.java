@@ -1,9 +1,11 @@
 package br.com.gabrielferreira.votacao.api.mappers.votingsession.output;
 
 import br.com.gabrielferreira.votacao.api.dtos.output.VotingSessionOutputDTO;
+import br.com.gabrielferreira.votacao.api.dtos.output.VotingSessionResultOutputDTO;
 import br.com.gabrielferreira.votacao.domain.entities.AgendaEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
 import br.com.gabrielferreira.votacao.domain.enums.VotingSessionStatus;
+import br.com.gabrielferreira.votacao.domain.repositories.projection.VotingSessionResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -46,5 +48,33 @@ class VotingSessionOutputMapperTest {
         assertEquals(start, dto.votingStartTime());
         assertEquals(end, dto.votingEndTime());
         assertEquals(VotingSessionStatus.OPEN.toString(), dto.votingStatus());
+    }
+
+    @Test
+    @Order(2)
+    void givenVotingSessionResultWhenToVotingSessionResultOutputDTOThenReturnDto() {
+        VotingSessionResult result = new VotingSessionResult() {
+            @Override
+            public Long getYesVotes() {
+                return 12L;
+            }
+
+            @Override
+            public Long getNoVotes() {
+                return 3L;
+            }
+
+            @Override
+            public Long getTotalVotes() {
+                return 15L;
+            }
+        };
+
+        VotingSessionResultOutputDTO dto = mapper.toVotingSessionResultOutputDTO(result);
+
+        assertNotNull(dto);
+        assertEquals(12L, dto.yesVotes());
+        assertEquals(3L, dto.noVotes());
+        assertEquals(15L, dto.totalVotes());
     }
 }

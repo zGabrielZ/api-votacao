@@ -7,6 +7,7 @@ import br.com.gabrielferreira.votacao.domain.exceptions.AgendaNotFoundException;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
 import br.com.gabrielferreira.votacao.domain.exceptions.VotingSessionNotFoundException;
 import br.com.gabrielferreira.votacao.domain.repositories.VotingSessionRepository;
+import br.com.gabrielferreira.votacao.domain.repositories.projection.VotingSessionResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -144,5 +145,59 @@ class VotingSessionServiceTest {
 
         AgendaNotFoundException ex = assertThrows(AgendaNotFoundException.class, () -> service.create(votingSessionEntity));
         assertTrue(ex.getMessage().contains("Agenda not found with ID"));
+    }
+
+    @Test
+    @Order(6)
+    void givenClosedVotingSessionWhenGetVotingSessionResultsThenReturnProjection() {
+        UUID votingSessionId = UUID.fromString("123e4567-e89b-12d3-a456-426614174333");
+        VotingSessionEntity closedSession = VotingSessionEntity.builder()
+                .idExternalUuid(votingSessionId)
+                .status(VotingSessionStatus.CLOSED)
+                .build();
+
+        VotingSessionResult result = new VotingSessionResult() {
+            @Override
+            public Long getYesVotes() {
+                return 10L;
+            }
+
+            @Override
+            public Long getNoVotes() {
+                return 4L;
+            }
+
+            @Override
+            public Long getTotalVotes() {
+                return 14L;
+            }
+        };
+
+        when(repository.findByIdExternalUuid(votingSessionId)).thenReturn(Optional.of(closedSession));
+        when(repository.findVotingSessionResults(votingSessionId)).thenReturn(result);
+
+        VotingSessionResult response = service.getVotingSessionResults(votingSessionId);
+
+        assertNotNull(response);
+        assertEquals(10L, response.getYesVotes());
+        assertEquals(4L, response.getNoVotes());
+        assertEquals(14L, response.getTotalVotes());
+    }
+
+    @Test
+    @Order(7)
+    void givenOpenVotingSessionWhenGetVotingSessionResultsThenThrowBusinessException() {
+        UUID votingSessionId = UUID.fromString("123e4567-e89b-12d3-a456-426614174444");
+        VotingSessionEntity openSession = VotingSessionEntity.builder()
+                .idExternalUuid(votingSessionId)
+                .status(VotingSessionStatus.OPEN)
+                .build();
+
+        when(repository.findByIdExternalUuid(votingSessionId)).thenReturn(Optional.of(openSession));
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> service.getVotingSessionResults(votingSessionId));
+
+        assertEquals("Voting session is still open", exception.getMessage());
     }
 }
