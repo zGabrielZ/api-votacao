@@ -200,4 +200,14 @@ class VotingSessionServiceTest {
 
         assertEquals("Voting session is still open", exception.getMessage());
     }
+
+    @Test
+    @Order(8)
+    void givenExpiredSessionsWhenCloseExpiredVotingSessionsThenInvokeRepository() {
+        when(repository.closeExpiredSessions(any(OffsetDateTime.class))).thenReturn(3);
+
+        service.closeExpiredVotingSessions();
+
+        verify(repository).closeExpiredSessions(any(OffsetDateTime.class));
+    }
 }

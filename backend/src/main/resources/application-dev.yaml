@@ -29,3 +29,8 @@ logging:
     br.com.gabrielferreira.votacao: DEBUG
     org:
       flywaydb: INFO
+
+voting-session:
+  scheduler:
+    enabled: true
+    interval: 60000

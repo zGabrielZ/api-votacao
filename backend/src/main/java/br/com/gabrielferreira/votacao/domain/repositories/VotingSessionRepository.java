@@ -3,10 +3,13 @@ package br.com.gabrielferreira.votacao.domain.repositories;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
 import br.com.gabrielferreira.votacao.domain.repositories.projection.VotingSessionResult;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,4 +26,13 @@ public interface VotingSessionRepository extends JpaRepository<VotingSessionEnti
             "where tvs.id_external_uuid = :votingSessionId " ,
             nativeQuery = true)
     VotingSessionResult findVotingSessionResults(@Param("votingSessionId") UUID votingSessionId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE TB_VOTING_SESSION " +
+            "SET VOTING_STATUS = 'CLOSED', " +
+            "UPDATED_AT = :now " +
+            "WHERE VOTING_STATUS = 'OPEN' " +
+            "AND VOTING_END_TIME <= :now", nativeQuery = true)
+    int closeExpiredSessions(@Param("now") OffsetDateTime now);
 }

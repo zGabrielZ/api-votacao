@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Slf4j
@@ -51,6 +52,13 @@ public class VotingSessionService {
                 .orElseThrow(() -> new VotingSessionNotFoundException(id));
         log.info("Found voting session: {}", votingSessionEntity);
         return votingSessionEntity;
+    }
+
+    @Transactional
+    public void closeExpiredVotingSessions() {
+        log.info("Closing expired voting sessions...");
+        int closedSessions = repository.closeExpiredSessions(OffsetDateTime.now(ZoneOffset.UTC));
+        log.info("Closed {} expired voting sessions", closedSessions);
     }
 
     private void validateVotingSessionDates(OffsetDateTime start, OffsetDateTime end) {
