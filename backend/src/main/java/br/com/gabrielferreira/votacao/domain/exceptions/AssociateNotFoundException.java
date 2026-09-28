@@ -3,7 +3,7 @@ package br.com.gabrielferreira.votacao.domain.exceptions;
 import java.io.Serial;
 import java.util.UUID;
 
-public class AssociateNotFoundException extends RuntimeException {
+public class AssociateNotFoundException extends EntityNotFoundException {
 
     @Serial
     private static final long serialVersionUID = 7215532819342419932L;

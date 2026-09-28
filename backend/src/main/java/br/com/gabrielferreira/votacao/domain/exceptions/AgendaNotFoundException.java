@@ -3,7 +3,7 @@ package br.com.gabrielferreira.votacao.domain.exceptions;
 import java.io.Serial;
 import java.util.UUID;
 
-public class AgendaNotFoundException extends RuntimeException {
+public class AgendaNotFoundException extends EntityNotFoundException {
 
     @Serial
     private static final long serialVersionUID = 2978653908409031146L;

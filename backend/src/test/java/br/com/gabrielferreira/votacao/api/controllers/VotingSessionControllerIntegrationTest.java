@@ -93,7 +93,7 @@ class VotingSessionControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -115,6 +115,17 @@ class VotingSessionControllerIntegrationTest {
         mockMvc.perform(get("/v1/voting-sessions/{votingSessionId}/results", votingSessionIdExistentOpen)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(5)
+    @SneakyThrows
+    void givenInvalidTypeForVotingSessionIdWhenGetResultsThenReturnBadRequest() {
+        mockMvc.perform(get("/v1/voting-sessions/{votingSessionId}/results", "abc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Parameter"))
+                .andExpect(jsonPath("$.detail").value("The parameter 'votingSessionId' received the value 'abc', which is of an invalid type. Correct and provide a value compatible with the type UUID."));
     }
 
 }
