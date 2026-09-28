@@ -156,6 +156,29 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        log.warn(ex.getMessage(), ex);
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        ProblemDetailType problemDetailType = ProblemDetailType.INVALID_PARAMETER;
+
+        String detail = ex.getMessage();
+        if (detail != null && detail.contains("No enum constant")) {
+            detail = "The request contains an invalid value. Please verify the fields and try again.";
+        } else if (detail == null || detail.isBlank()) {
+            detail = "The request contains an invalid value.";
+        }
+
+        ProblemDetailDTO problemDetailDto = createProblemDetailDto(
+                httpStatus,
+                problemDetailType,
+                detail,
+                null
+        );
+        return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
