@@ -1,7 +1,6 @@
 package br.com.gabrielferreira.votacao.api.controllers;
 
 import br.com.gabrielferreira.votacao.api.dtos.input.VoteInputDTO;
-import br.com.gabrielferreira.votacao.domain.enums.VoteOption;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
