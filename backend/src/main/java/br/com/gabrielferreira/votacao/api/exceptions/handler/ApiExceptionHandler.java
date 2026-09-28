@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -37,6 +38,7 @@ import java.util.List;
 
 @ControllerAdvice
 @RequiredArgsConstructor
+@Slf4j
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final String GENERIC_USER_MESSAGE = "An unexpected internal system error has occurred. Please try again and if the problem persists, contact the system administrator.";
@@ -70,6 +72,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             )
     )
     public ResponseEntity<Object> handleUncaught(Exception ex, WebRequest request) {
+        log.error(ex.getMessage(), ex);
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         ProblemDetailType problemDetailType = ProblemDetailType.SYSTEM_ERROR;
         ProblemDetailDTO problemDetailDto = createProblemDetailDto(
@@ -105,6 +108,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             )
     )
     public ResponseEntity<Object> handleBusinessException(BusinessException ex, WebRequest request) {
+        log.warn(ex.getMessage(), ex);
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         ProblemDetailType problemDetailType = ProblemDetailType.BUSINESS_RULE_VIOLATION;
         ProblemDetailDTO problemDetailDto = createProblemDetailDto(
@@ -140,6 +144,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             )
     )
     public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+        log.warn(ex.getMessage(), ex);
         HttpStatus httpStatus = HttpStatus.NOT_FOUND;
         ProblemDetailType problemDetailType = ProblemDetailType.RESOURCE_NOT_FOUND;
         ProblemDetailDTO problemDetailDto = createProblemDetailDto(
@@ -158,6 +163,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             @NonNull HttpStatusCode status,
             @NonNull WebRequest request
     ) {
+        log.warn(ex.getMessage(), ex);
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         ProblemDetailType problemDetailType = ProblemDetailType.INVALID_DATA;
         ProblemDetailDTO problemDetailDto = createProblemDetailDto(
@@ -176,6 +182,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             @NonNull HttpStatusCode status,
             @NonNull WebRequest request
     ) {
+        log.warn(ex.getMessage(), ex);
         if (ex instanceof MethodArgumentTypeMismatchException methodArgumentTypeMismatchException) {
             HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
             ProblemDetailType problemDetailType = ProblemDetailType.INVALID_PARAMETER;
@@ -202,6 +209,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             @NonNull HttpStatusCode status,
             @NonNull WebRequest request
     ) {
+        log.warn(ex.getMessage(), ex);
         HttpStatus httpStatus = HttpStatus.NOT_FOUND;
         ProblemDetailType problemDetailType = ProblemDetailType.RESOURCE_NOT_FOUND;
         String detail = String.format("The resource '%s' who you tried to access is not found.", ex.getResourcePath());
