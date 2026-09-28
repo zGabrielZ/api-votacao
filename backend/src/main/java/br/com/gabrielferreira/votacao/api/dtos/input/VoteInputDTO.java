@@ -18,8 +18,9 @@ public record VoteInputDTO(
         UUID associateId,
 
         @Schema(
-                description = "Vote option",
-                example = "YES"
+                description = "Vote option. Allowed values: YES or NO",
+                example = "YES",
+                allowableValues = {"YES", "NO"}
         )
         @NotBlank
         String voteOption
