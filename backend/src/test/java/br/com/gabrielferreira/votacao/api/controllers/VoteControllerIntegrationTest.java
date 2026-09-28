@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class VoteControllerIntegrationTest {
 
-    private static final String URL = "/api/v1/voting-sessions/{votingSessionId}/votes";
+    private static final String URL = "/v1/voting-sessions/{votingSessionId}/votes";
 
     @Autowired
     private MockMvc mockMvc;

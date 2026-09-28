@@ -20,7 +20,7 @@ import java.util.UUID;
 @Tag(name = "Votes", description = "Vote management endpoints")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/voting-sessions/{votingSessionId}/votes")
+@RequestMapping("/v1/voting-sessions/{votingSessionId}/votes")
 public class VoteController {
 
     private final VoteService voteService;

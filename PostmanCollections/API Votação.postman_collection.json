@@ -92,12 +92,11 @@
               }
             },
             "url": {
-              "raw": "{{host}}/api/v1/voting-sessions/:votingSessionId/votes",
+              "raw": "{{host}}/v1/voting-sessions/:votingSessionId/votes",
               "host": [
                 "{{host}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "voting-sessions",
                 ":votingSessionId",
