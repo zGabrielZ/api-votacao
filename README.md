@@ -196,6 +196,55 @@ Resposta esperada:
 - um associado não pode votar mais de uma vez na mesma pauta
 - o resultado só pode ser consultado quando a sessão já estiver fechada
 
+## Scheduler de fechamento de sessões
+
+A aplicação também possui um scheduler responsável por fechar automaticamente as sessões de votação que já passaram do horário final.
+
+Esse comportamento está implementado em:
+
+- `backend/src/main/java/br/com/gabrielferreira/votacao/domain/scheduler/VotingSessionScheduler.java`
+- `backend/src/main/java/br/com/gabrielferreira/votacao/domain/services/VotingSessionService.java`
+
+A classe `VotingSessionScheduler` é um componente Spring com `@Scheduled` e executa periodicamente a lógica:
+
+```java
+@Scheduled(
+        initialDelayString = "${voting-session.scheduler.interval}",
+        fixedRateString = "${voting-session.scheduler.interval}"
+)
+public void closeExpiredVotingSessions() {
+    log.info("Closing expired voting sessions...");
+    votingSessionService.closeExpiredVotingSessions();
+    log.info("Closed expired voting sessions...");
+}
+```
+
+A configuração do intervalo está em:
+
+```yaml
+voting-session:
+  scheduler:
+    enabled: true
+    interval: 60000
+```
+
+Isso significa que a aplicação tenta fechar sessões expirada a cada 60 segundos.
+
+O método real da regra fica no serviço:
+
+```java
+@Transactional
+public void closeExpiredVotingSessions() {
+    log.info("Closing expired voting sessions...");
+    int closedSessions = repository.closeExpiredSessions(OffsetDateTime.now(ZoneOffset.UTC));
+    log.info("Closed {} expired voting sessions", closedSessions);
+}
+```
+
+Em outras palavras, o scheduler consulta o repositório para atualizar todas as sessões em aberto cuja `VOTING_END_TIME` já passou, marcando-as como `CLOSED`.
+
+Essa automação é útil para garantir que a API não dependa de intervenção manual para encerrar votações vencidas.
+
 ## Testes
 
 Para rodar a suíte de testes:
