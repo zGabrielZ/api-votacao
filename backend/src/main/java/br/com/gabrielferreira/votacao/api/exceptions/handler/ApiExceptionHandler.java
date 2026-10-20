@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -35,6 +36,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -177,6 +179,44 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 null
         );
         return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex,
+            WebRequest request) {
+        log.error(ex.getMessage(), ex);
+        Throwable cause = ex;
+
+        while (cause != null) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException constraintEx) {
+                String constraintName = constraintEx.getConstraintName();
+                if (constraintName != null &&
+                        (constraintName.equalsIgnoreCase("tb_vote_agenda_associate_unique")
+                                || constraintName.toUpperCase(Locale.ROOT)
+                                .startsWith("PUBLIC.TB_VOTE_AGENDA_ASSOCIATE_UNIQUE INDEX "))) {
+                    HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+                    ProblemDetailDTO problemDetailDto = createProblemDetailDto(
+                            httpStatus,
+                            ProblemDetailType.BUSINESS_RULE_VIOLATION,
+                            "Associate has already voted on this agenda",
+                            null
+                    );
+
+                    return handleExceptionInternal(
+                            ex,
+                            problemDetailDto,
+                            new HttpHeaders(),
+                            httpStatus,
+                            request
+                    );
+                }
+            }
+
+            cause = cause.getCause();
+        }
+
+        return handleUncaught(ex, request);
     }
 
     @Override

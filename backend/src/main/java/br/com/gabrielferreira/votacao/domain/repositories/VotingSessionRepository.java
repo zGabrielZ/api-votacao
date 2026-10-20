@@ -16,6 +16,9 @@ import java.util.UUID;
 @Repository
 public interface VotingSessionRepository extends JpaRepository<VotingSessionEntity, Long> {
 
+    @Query("SELECT vs FROM VotingSessionEntity vs " +
+            "JOIN FETCH vs.agenda a " +
+            "WHERE vs.idExternalUuid = :votingSessionId")
     Optional<VotingSessionEntity> findByIdExternalUuid(UUID votingSessionId);
 
     @Query(value = "select SUM(CASE WHEN VOTE_OPTION = 'YES' THEN 1 ELSE 0 END) AS yesVotes, " +

@@ -1,5 +1,6 @@
 package br.com.gabrielferreira.votacao.domain.services;
 
+import br.com.gabrielferreira.votacao.domain.entities.AgendaEntity;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VoteEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
@@ -62,6 +63,7 @@ class VoteServiceTest {
                 .votingStartTime(OffsetDateTime.now().minusMinutes(10))
                 .votingEndTime(OffsetDateTime.now().plusMinutes(30))
                 .status(VotingSessionStatus.OPEN)
+                .agenda(AgendaEntity.builder().idExternalUuid(UUID.randomUUID()).build())
                 .build();
 
         associateEntity = AssociateEntity.builder()
@@ -86,8 +88,6 @@ class VoteServiceTest {
                 .thenReturn(votingSessionEntity);
         when(associateService.findById(voteEntity.getAssociate().getIdExternalUuid()))
                 .thenReturn(associateEntity);
-        when(voteRepository.existsByVotingSessionAndAssociate(votingSessionEntity, associateEntity))
-                .thenReturn(false);
         when(voteRepository.save(voteEntity)).thenReturn(voteEntity);
 
         VoteEntity created = service.create(voteEntity);
@@ -116,21 +116,6 @@ class VoteServiceTest {
 
     @Test
     @Order(3)
-    void givenAssociateAlreadyVotedWhenCreateThenThrow() {
-        when(votingSessionService.findById(voteEntity.getVotingSession().getIdExternalUuid()))
-                .thenReturn(votingSessionEntity);
-        when(associateService.findById(voteEntity.getAssociate().getIdExternalUuid()))
-                .thenReturn(associateEntity);
-        when(voteRepository.existsByVotingSessionAndAssociate(votingSessionEntity, associateEntity))
-                .thenReturn(true);
-
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(voteEntity));
-
-        assertEquals("Associate has already voted in this session", ex.getMessage());
-    }
-
-    @Test
-    @Order(4)
     void givenAssociateNotFoundWhenCreateThenThrow() {
         when(votingSessionService.findById(voteEntity.getVotingSession().getIdExternalUuid()))
                 .thenReturn(votingSessionEntity);

@@ -19,6 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DisplayName("Integration tests for VoteController")
@@ -40,10 +41,13 @@ class VoteControllerIntegrationTest {
 
     private UUID associateId;
 
+    private UUID votingSessionIdAlreadyAssociated;
+
     @BeforeEach
     void setUp() {
         votingSessionId = UUID.fromString("c86dabe8-656c-4490-a142-e49e406de0a1");
         associateId = UUID.fromString("275cbc94-7342-4770-9c20-874b50ca3ac5");
+        votingSessionIdAlreadyAssociated = UUID.fromString("f0ff723a-af3d-4fe3-b591-358226dc9c98");
     }
 
     @Test
@@ -62,5 +66,25 @@ class VoteControllerIntegrationTest {
                         .content(payload)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(2)
+    @SneakyThrows
+    void givenAlreadyVotedAssociateWhenPostThenReturnBadRequest() {
+        VoteInputDTO dto = VoteInputDTO.builder()
+                .associateId(associateId)
+                .voteOption("YES")
+                .build();
+
+        String payload = objectMapper.writeValueAsString(dto);
+
+        mockMvc.perform(post(URL, votingSessionIdAlreadyAssociated)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Business Rule Violation"))
+                .andExpect(jsonPath("$.detail").value("Associate has already voted on this agenda"));
     }
 }

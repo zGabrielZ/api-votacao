@@ -1,5 +1,6 @@
 package br.com.gabrielferreira.votacao.domain.services;
 
+import br.com.gabrielferreira.votacao.domain.entities.AgendaEntity;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VoteEntity;
 import br.com.gabrielferreira.votacao.domain.entities.VotingSessionEntity;
@@ -33,11 +34,13 @@ public class VoteService {
         VotingSessionEntity votingSession = votingSessionService.findById(voteEntity.getVotingSession().getIdExternalUuid());
         voteEntity.setVotingSession(votingSession);
 
+        AgendaEntity agendaEntity = votingSession.getAgenda();
+        voteEntity.setAgenda(agendaEntity);
+
         AssociateEntity associate = findByAssociate(voteEntity.getAssociate().getIdExternalUuid());
         voteEntity.setAssociate(associate);
 
         validateVotingSessionIsOpen(votingSession);
-        validateAssociateHasNotAlreadyVoted(votingSession, associate);
 
         voteEntity = voteRepository.save(voteEntity);
         log.info("Created vote for voting session: {}", voteEntity);
@@ -56,14 +59,8 @@ public class VoteService {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         if (votingSession.getStatus() != VotingSessionStatus.OPEN
                 || now.isBefore(votingSession.getVotingStartTime())
-                || now.isAfter(votingSession.getVotingEndTime())) {
+                || !now.isBefore(votingSession.getVotingEndTime())) {
             throw new BusinessException("Voting session is not open");
-        }
-    }
-
-    private void validateAssociateHasNotAlreadyVoted(VotingSessionEntity votingSession, AssociateEntity associate) {
-        if (voteRepository.existsByVotingSessionAndAssociate(votingSession, associate)) {
-            throw new BusinessException("Associate has already voted in this session");
         }
     }
 }

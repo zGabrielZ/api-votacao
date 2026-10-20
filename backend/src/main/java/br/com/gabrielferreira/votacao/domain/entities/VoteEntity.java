@@ -13,7 +13,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "TB_VOTE",
-        uniqueConstraints = @UniqueConstraint(name = "tb_vote_voting_session_unique", columnNames = {"ID_VOTING_SESSION", "ID_ASSOCIATE"}))
+        uniqueConstraints = @UniqueConstraint(
+                name = "tb_vote_agenda_associate_unique",
+                columnNames = {"ID_AGENDA", "ID_ASSOCIATE"}
+        )
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,6 +48,10 @@ public class VoteEntity implements Serializable {
     @Column(name = "VOTE_OPTION", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private VoteOption voteOption;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_AGENDA", nullable = false)
+    private AgendaEntity agenda;
 
     @CreationTimestamp
     @Column(name = "CREATED_AT", nullable = false, updatable = false)
