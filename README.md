@@ -1,54 +1,51 @@
 # API Votação
 
-API para cadastro de pautas, abertura de sessões de votação, recebimento de votos e cálculo do resultado final.
+API para cadastro de pautas, abertura de sessões de votação, registro de votos e consulta do resultado final.
 
 ## Visão geral
 
-Este projeto foi desenvolvido em Java com Spring Boot e usa:
+O projeto foi desenvolvido em Java com Spring Boot e segue o padrão MVC + JPA + Flyway. Ele permite:
+
+- cadastrar pautas;
+- abrir sessões de votação vinculadas a uma pauta;
+- registrar votos de associados;
+- consultar o resultado final da sessão;
+- fechar automaticamente sessões expiradas por scheduler.
+
+## Stack
 
 - Java 17
-- Spring Boot 4.x
-- PostgreSQL
+- Spring Boot 4.1.1
+- Spring Web MVC
 - Spring Data JPA
+- PostgreSQL
 - Flyway
 - MapStruct
-- SpringDoc OpenAPI (Swagger)
-- Docker Compose para subir o banco
+- Lombok
+- JUnit 5 + Spring Test
+- H2 para testes
 
 ## Estrutura do projeto
 
 - `backend/` — aplicação principal
-- `backend/src/main/java` — código fonte da API
-- `backend/src/main/resources` — arquivos de configuração e migrations
+- `backend/src/main/java` — código da API
+- `backend/src/main/resources` — configurações, migrations e dados de teste
 - `backend/src/test/java` — testes unitários e de integração
-- `infrastructure/docker-compose.yaml` — ambiente do banco PostgreSQL
-- `PostmanCollections/` — coleções de testes da API
+- `backend/src/test/resources` — configuração e scripts do profile de teste
+- `infrastructure/` — configuração do banco em Docker
+- `PostmanCollections/` — coleções para testes manuais
 
 ## Pré-requisitos
 
 - Java 17+
-- Maven
+- Maven 3.9+
 - Docker e Docker Compose
-- PostgreSQL (opcional, se você não usar o Docker)
 
 ## Banco de dados
 
-A aplicação usa PostgreSQL com as configurações definidas em:
+O projeto usa PostgreSQL em desenvolvimento e H2 em testes.
 
-- `backend/src/main/resources/application.yaml`
-
-Configuração principal:
-
-- URL: `jdbc:postgresql://localhost:5000/votacao-dev?currentSchema=dev`
-- Usuário: `admin`
-- Senha: `admin`
-- Porta: `5000`
-
-O Flyway executa os scripts em:
-
-- `backend/src/main/resources/db/migration`
-
-## Subindo o banco com Docker Compose
+### PostgreSQL local via Docker
 
 No diretório `infrastructure`, execute:
 
@@ -56,76 +53,61 @@ No diretório `infrastructure`, execute:
 docker compose up -d
 ```
 
-Ou, se preferir usar o arquivo explicitamente:
+A configuração do banco do compose está em `infrastructure/docker-compose.yaml` e expõe:
 
-```bash
-docker compose -f infrastructure/docker-compose.yaml up -d
-```
-
-Esse comando sobe um container PostgreSQL com:
-
+- host: `localhost`
+- porta: `5000`
 - banco: `votacao-dev`
 - usuário: `admin`
 - senha: `admin`
-- porta exposta: `5000`
+
+A aplicação usa o profile `dev`, configurado em `backend/src/main/resources/application-dev.yaml`:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5000/votacao-dev?currentSchema=dev
+    username: admin
+    password: admin
+  flyway:
+    enabled: true
+    schemas: dev
+```
+
+As migrations ficam em:
+
+- `backend/src/main/resources/db/migration`
 
 ## Executando a API
 
-Na raiz do projeto backend:
+Na pasta `backend`:
 
 ```bash
-cd backend
 mvn spring-boot:run
 ```
 
-A aplicação inicia na porta `8080` e com contexto `/api`.
+A aplicação inicia com:
 
-Exemplo de URL base:
+- porta: `8080`
+- contexto: `/api`
+
+Base URL:
 
 ```text
 http://localhost:8080/api
 ```
 
-Swagger/OpenAPI:
-
-```text
-http://localhost:8080/api/swagger-ui/index.html
-```
-
-## Antes de testar as APIs
-
-Antes de chamar endpoints que dependem de associado, você precisa inserir um registro na tabela `TB_ASSOCIATE`.
-
-Exemplo:
-
-```sql
-INSERT INTO TB_ASSOCIATE
-(ID_EXTERNAL_UUID, NAME, EMAIL, PASSWORD, DOCUMENT_NUMBER, CREATED_AT, UPDATED_AT)
-VALUES
-    (
-        '10dce706-0eae-4693-9593-ab817dddd143',
-        'Associate Test',
-        'associate@test.com',
-        'test',
-        '12345678900',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
-```
-
-Isso é necessário porque os votos são associados a um usuário/associado único, e a API valida esse identificador antes de registrar o voto.
-
 ## Endpoints da API
 
-A seguir, os endpoints principais do projeto.
+Todos os endpoints são acessados com o prefixo `/api`.
 
-### 1) Cadastrar pauta
+### 1) Criar pauta
 
 ```http
 POST /api/v1/agenda
 ```
 
-Body de exemplo:
+Exemplo de body:
 
 ```json
 {
@@ -134,13 +116,15 @@ Body de exemplo:
 }
 ```
 
+Resposta: `201 Created` com o objeto da pauta criada.
+
 ### 2) Abrir sessão de votação
 
 ```http
-POST /api/v1/agenda/:agendaId/voting-sessions
+POST /api/v1/agenda/{agendaId}/voting-sessions
 ```
 
-Body de exemplo:
+Exemplo de body:
 
 ```json
 {
@@ -149,33 +133,34 @@ Body de exemplo:
 }
 ```
 
-Essa rota cria uma sessão de votação vinculada a uma pauta.
+Resposta: `201 Created` com os dados da sessão criada.
 
 ### 3) Registrar voto
 
 ```http
-POST /api/v1/voting-sessions/:votingSessionId/votes
+POST /api/v1/voting-sessions/{votingSessionId}/votes
 ```
 
-Body de exemplo:
+Exemplo de body:
 
 ```json
 {
-  "associateId": "10dce706-0eae-4693-9593-ab817dddd143",
+  "associateId": "4f0d9d4f-7c5c-4d7d-bfa4-0d7f0a13ee2a",
   "voteOption": "YES"
 }
 ```
 
 Observações:
 
-- os votos aceitos são apenas `YES` ou `NO`
-- cada associado pode votar apenas uma vez por pauta
-- o associado deve existir previamente no banco
+- `voteOption` aceita apenas `YES` ou `NO`;
+- cada associado só pode votar uma vez por sessão;
+- o associado precisa existir previamente no banco;
+- a sessão precisa estar aberta para receber votos.
 
 ### 4) Consultar resultado da votação
 
 ```http
-GET /api/v1/voting-sessions/:votingSessionId/results
+GET /api/v1/voting-sessions/{votingSessionId}/results
 ```
 
 Resposta esperada:
@@ -188,38 +173,43 @@ Resposta esperada:
 }
 ```
 
-## Regras de negócio principais
+## Regras de negócio
 
-- uma pauta pode ter uma ou mais sessões de votação
-- a sessão só pode ser aberta se as datas forem válidas
-- a data final precisa ser posterior à data inicial
-- um associado não pode votar mais de uma vez na mesma pauta
-- o resultado só pode ser consultado quando a sessão já estiver fechada
+- uma pauta pode ter uma ou mais sessões de votação;
+- a sessão só pode ser criada se a data final for posterior à data inicial;
+- um associado não pode votar mais de uma vez na mesma sessão;
+- o cálculo do resultado depende do status da sessão;
+- as sessões expiradas são fechadas automaticamente pelo scheduler.
+
+## Associado
+
+A API não expõe um endpoint público para criação de associado no momento. O registro do associado deve ser inserido no banco, por seed/migration ou via dado de teste, antes de registrar um voto.
+
+Exemplo de insert:
+
+```sql
+INSERT INTO TB_ASSOCIATE (
+  ID_EXTERNAL_UUID,
+  NAME,
+  EMAIL,
+  PASSWORD,
+  DOCUMENT_NUMBER,
+  CREATED_AT,
+  UPDATED_AT
+) VALUES (
+  '4f0d9d4f-7c5c-4d7d-bfa4-0d7f0a13ee2a',
+  'Maria Silva',
+  'maria@email.com',
+  '123456',
+  '06579044063',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+```
 
 ## Scheduler de fechamento de sessões
 
-A aplicação também possui um scheduler responsável por fechar automaticamente as sessões de votação que já passaram do horário final.
-
-Esse comportamento está implementado em:
-
-- `backend/src/main/java/br/com/gabrielferreira/votacao/domain/scheduler/VotingSessionScheduler.java`
-- `backend/src/main/java/br/com/gabrielferreira/votacao/domain/services/VotingSessionService.java`
-
-A classe `VotingSessionScheduler` é um componente Spring com `@Scheduled` e executa periodicamente a lógica:
-
-```java
-@Scheduled(
-        initialDelayString = "${voting-session.scheduler.interval}",
-        fixedRateString = "${voting-session.scheduler.interval}"
-)
-public void closeExpiredVotingSessions() {
-    log.info("Closing expired voting sessions...");
-    votingSessionService.closeExpiredVotingSessions();
-    log.info("Closed expired voting sessions...");
-}
-```
-
-A configuração do intervalo está em:
+A aplicação possui um scheduler para encerrar automaticamente sessões vencidas. A configuração está em `backend/src/main/resources/application-dev.yaml`:
 
 ```yaml
 voting-session:
@@ -228,22 +218,7 @@ voting-session:
     interval: 60000
 ```
 
-Isso significa que a aplicação tenta fechar sessões expirada a cada 60 segundos.
-
-O método real da regra fica no serviço:
-
-```java
-@Transactional
-public void closeExpiredVotingSessions() {
-    log.info("Closing expired voting sessions...");
-    int closedSessions = repository.closeExpiredSessions(OffsetDateTime.now(ZoneOffset.UTC));
-    log.info("Closed {} expired voting sessions", closedSessions);
-}
-```
-
-Em outras palavras, o scheduler consulta o repositório para atualizar todas as sessões em aberto cuja `VOTING_END_TIME` já passou, marcando-as como `CLOSED`.
-
-Essa automação é útil para garantir que a API não dependa de intervenção manual para encerrar votações vencidas.
+Esse scheduler verifica periodicamente sessões em aberto cujo tempo de encerramento já passou e atualiza o status para `CLOSED`.
 
 ## Testes
 
@@ -254,10 +229,37 @@ cd backend
 mvn test
 ```
 
-## Observações importantes
+Para um teste específico:
 
-- a API usa contexto `/api`, então todos os endpoints começam com `/api`.
-- o ambiente local de desenvolvimento usa PostgreSQL em Docker.
+```bash
+cd backend
+mvn -Dtest=VoteControllerIntegrationTest test
+```
+
+## Profile de teste
+
+O perfil de teste usa H2 em memória e desativa o Flyway:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+```
+
+Os scripts de seed do H2 ficam em `backend/src/test/resources/import.sql`.
+
+## Observações
+
+- o projeto usa `/api` como contexto global;
+- o banco local de desenvolvimento é executado via Docker;
+- o README pode ser atualizado conforme novas rotas e recursos forem adicionados.
 - os scripts SQL de migration ficam em `backend/src/main/resources/db/migration` e são executados automaticamente pelo Flyway.
 - o Swagger facilita o teste manual dos endpoints diretamente no navegador.
 
