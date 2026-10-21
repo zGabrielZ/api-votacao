@@ -38,6 +38,6 @@ class AssociateOutputMapperTest {
         assertEquals(externalId, dto.id());
         assertEquals(entity.getName(), dto.name());
         assertEquals(entity.getEmail(), dto.email());
-        assertEquals(entity.getDocumentNumber(), dto.documentNumber());
+        assertEquals("067.380.100-44", dto.documentNumber());
     }
 }

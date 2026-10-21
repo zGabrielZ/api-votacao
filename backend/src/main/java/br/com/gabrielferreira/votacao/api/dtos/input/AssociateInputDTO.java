@@ -42,7 +42,7 @@ public record AssociateInputDTO(
 
         @Schema(
                 description = "Associate document number (CPF)",
-                example = "06738010044"
+                example = "067.380.100-44"
         )
         @NotBlank
         @CPF

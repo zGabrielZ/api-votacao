@@ -56,7 +56,7 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.name").value("Ana Costa"))
                 .andExpect(jsonPath("$.email").value("ana.costa@email.com"))
-                .andExpect(jsonPath("$.documentNumber").value("06738010044"));
+                .andExpect(jsonPath("$.documentNumber").value("067.380.100-44"));
     }
 
     @Test

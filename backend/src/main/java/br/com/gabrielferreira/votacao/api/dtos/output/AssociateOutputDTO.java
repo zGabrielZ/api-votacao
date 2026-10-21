@@ -28,7 +28,7 @@ public record AssociateOutputDTO(
 
         @Schema(
                 description = "Associate document number (CPF)",
-                example = "06738010044"
+                example = "067.380.100-44"
         )
         String documentNumber
 ) implements Serializable {
