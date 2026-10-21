@@ -13,9 +13,13 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.UUID;
+
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -247,5 +251,49 @@ class AssociateControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Business Rule Violation"))
                 .andExpect(jsonPath("$.detail").value("Associate with this document number already exists"));
+    }
+
+    @Test
+    @Order(10)
+    @SneakyThrows
+    void givenExistingAssociateWhenGetByIdThenReturnOk() {
+        AssociateInputDTO inputDTO = AssociateInputDTO.builder()
+                .name("João Silva")
+                .email("joao@email.com")
+                .password("Password@123")
+                .documentNumber("12345678909")
+                .build();
+
+        MvcResult createResult = mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inputDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseBody = createResult.getResponse().getContentAsString();
+        String associateIdStr = objectMapper.readTree(responseBody).get("id").asString();
+        UUID associateId = UUID.fromString(associateIdStr);
+
+        mockMvc.perform(get(URL + "/" + associateId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(associateIdStr))
+                .andExpect(jsonPath("$.name").value("João Silva"))
+                .andExpect(jsonPath("$.email").value("joao@email.com"))
+                .andExpect(jsonPath("$.documentNumber").value("123.456.789-09"));
+    }
+
+    @Test
+    @Order(11)
+    @SneakyThrows
+    void givenNonExistingAssociateWhenGetByIdThenReturnNotFound() {
+        UUID nonExistingId = UUID.fromString("99999999-9999-9999-9999-999999999999");
+
+        mockMvc.perform(get(URL + "/" + nonExistingId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Resource Not Found"))
+                .andExpect(jsonPath("$.detail").value("Associate not found with ID: " + nonExistingId));
     }
 }
