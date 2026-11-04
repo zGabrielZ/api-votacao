@@ -20,6 +20,7 @@ public interface AssociateInputMapper {
 
     AssociateEntity toAssociateEntity(UpdateAssociateInputDTO updateAssociateInputDTO);
 
+    @Mapping(target = "documentNumber", expression = "java(cleanDocumentNumber(filterDTO.documentNumber()))")
     AssociateFilter toAssociateFilter(AssociateFilterDTO filterDTO);
 
     @Named("cleanDocumentNumber")

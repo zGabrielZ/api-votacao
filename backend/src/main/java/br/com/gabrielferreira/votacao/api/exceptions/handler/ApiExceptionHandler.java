@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -22,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -33,12 +35,16 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.exc.PropertyBindingException;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -311,6 +317,70 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 null
         );
         return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request
+    ) {
+        Throwable rootCause = ExceptionUtils.getRootCause(ex);
+        if (rootCause instanceof InvalidFormatException invalidFormatException) {
+            return handleInvalidFormatException(invalidFormatException, headers, status, request);
+        }
+
+        if (rootCause instanceof PropertyBindingException propertyBindingException) {
+            return handlePropertyBindingException(propertyBindingException, headers, status, request);
+        }
+
+        HttpStatus httpStatus = HttpStatus.valueOf(status.value());
+        ProblemDetailType problemDetailType = ProblemDetailType.MALFORMED_REQUEST;
+        String detail = "Your request body is malformed. Please correct it and try again.";
+        ProblemDetailDTO problemDetailDto = createProblemDetailDto(
+                httpStatus,
+                problemDetailType,
+                detail,
+                null
+        );
+        return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
+    }
+
+    private ResponseEntity<Object> handleInvalidFormatException(InvalidFormatException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        HttpStatus httpStatus = HttpStatus.valueOf(status.value());
+        ProblemDetailType problemDetailType = ProblemDetailType.MALFORMED_REQUEST;
+        String detail = String.format("The property '%s' received the value '%s', which is of an invalid type. Correct and provide a value compatible with the type %s.",
+                getPath(ex.getPath()),
+                ex.getValue(),
+                ex.getTargetType().getSimpleName()
+        );
+        ProblemDetailDTO problemDetailDto = createProblemDetailDto(
+                httpStatus,
+                problemDetailType,
+                detail,
+                null
+        );
+        return handleExceptionInternal(ex, problemDetailDto, headers, httpStatus, request);
+    }
+
+    private ResponseEntity<Object> handlePropertyBindingException(PropertyBindingException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        HttpStatus httpStatus =  HttpStatus.valueOf(status.value());
+        ProblemDetailType problemDetailType = ProblemDetailType.MALFORMED_REQUEST;
+        String detail = String.format("The property '%s' does not exist. Correct or remove this property and try again.",  getPath(ex.getPath()));
+        ProblemDetailDTO problemDetailDto = createProblemDetailDto(
+                httpStatus,
+                problemDetailType,
+                detail,
+                null
+        );
+        return handleExceptionInternal(ex, problemDetailDto, headers, httpStatus, request);
+    }
+
+    private String getPath(List<JacksonException.Reference> pathList) {
+        return pathList.stream()
+                .map(JacksonException.Reference::getPropertyName)
+                .collect(Collectors.joining("."));
     }
 
     private ProblemDetailDTO createProblemDetailDto(HttpStatus httpStatus, ProblemDetailType problemDetailType,

@@ -31,7 +31,7 @@ public class PageTranslate {
     public static Map<String, String> getAssociatePageableFieldsMapping() {
         HashMap<String, String> fieldsMapping = new HashMap<>();
         // DTO - Entity
-        fieldsMapping.put("associateId", "idExternalUuid");
+        fieldsMapping.put("id", "idExternalUuid");
         fieldsMapping.put("name", "name");
         fieldsMapping.put("email", "email");
         fieldsMapping.put("documentNumber", "documentNumber");

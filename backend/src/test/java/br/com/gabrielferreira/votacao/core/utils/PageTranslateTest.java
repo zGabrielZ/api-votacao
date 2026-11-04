@@ -21,7 +21,7 @@ class PageTranslateTest {
     @Test
     @Order(1)
     void givenPageableWithAssociateIdSortWhenToPageableThenReturnTranslatedPageable() {
-        Pageable pageable = PageRequest.of(0, 10, Sort.by("associateId").ascending());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Map<String, String> fieldsMapping = PageTranslate.getAssociatePageableFieldsMapping();
 
         Pageable result = PageTranslate.toPageable(pageable, fieldsMapping);
@@ -81,7 +81,7 @@ class PageTranslateTest {
         Map<String, String> mapping = PageTranslate.getAssociatePageableFieldsMapping();
 
         assertNotNull(mapping);
-        assertEquals("idExternalUuid", mapping.get("associateId"));
+        assertEquals("idExternalUuid", mapping.get("id"));
         assertEquals("name", mapping.get("name"));
         assertEquals("email", mapping.get("email"));
         assertEquals("documentNumber", mapping.get("documentNumber"));

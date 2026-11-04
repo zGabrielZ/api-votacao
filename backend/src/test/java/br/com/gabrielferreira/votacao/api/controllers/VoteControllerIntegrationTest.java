@@ -87,4 +87,26 @@ class VoteControllerIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Business Rule Violation"))
                 .andExpect(jsonPath("$.detail").value("Associate has already voted on this agenda"));
     }
+
+    @Test
+    @Order(3)
+    @SneakyThrows
+    void givenInvalidVoteOptionWhenPostThenReturnBadRequest() {
+        VoteInputDTO dto = VoteInputDTO.builder()
+                .associateId(associateId)
+                .voteOption("INVALID")
+                .build();
+
+        String payload = objectMapper.writeValueAsString(dto);
+
+        mockMvc.perform(post(URL, votingSessionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Parameter"))
+                .andExpect(jsonPath("$.detail").value(
+                        "The request contains an invalid value. Please verify the fields and try again."
+                ));
+    }
 }

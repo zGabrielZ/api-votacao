@@ -728,4 +728,65 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.totalPages").value(0));
     }
+
+    @Test
+    @Order(26)
+    @SneakyThrows
+    void givenMalformedJsonWhenPostThenReturnBadRequest() {
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{invalid json")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Malformed Request"))
+                .andExpect(jsonPath("$.detail").value(
+                        "Your request body is malformed. Please correct it and try again."
+                ));
+    }
+
+    @Test
+    @Order(27)
+    @SneakyThrows
+    void givenInvalidFieldTypeWhenPostThenReturnBadRequest() {
+        String payload = """
+                {
+                   "associateId": "123"
+                }
+                """;
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Malformed Request"))
+                .andExpect(jsonPath("$.detail").value(
+                        "The property 'associateId' received the value '123', which is of an invalid type. Correct and provide a value compatible with the type UUID."
+                ));
+    }
+
+    @Test
+    @Order(28)
+    @SneakyThrows
+    void givenUnknownPropertyWhenPostThenReturnBadRequest() {
+        String payload = """
+                {
+                  "name": "Ana Costa",
+                  "email": "ana.costa@email.com",
+                  "password": "Password@123",
+                  "documentNumber": "06738010044",
+                  "unknownProperty": "value"
+                }
+                """;
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Malformed Request"))
+                .andExpect(jsonPath("$.detail").value(
+                        "The property 'unknownProperty' does not exist. Correct or remove this property and try again."
+                ));
+    }
 }
