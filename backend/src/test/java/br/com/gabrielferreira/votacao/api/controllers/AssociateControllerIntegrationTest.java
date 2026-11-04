@@ -546,4 +546,186 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Entity In Use"))
                 .andExpect(jsonPath("$.detail").value("Cannot delete associate because it is in use"));
     }
+
+    @Test
+    @Order(20)
+    @SneakyThrows
+    void givenEmptyFilterWhenSearchThenReturnAllAssociates() {
+        AssociateInputDTO createDTO = AssociateInputDTO.builder()
+                .name("Ana Silva")
+                .email("ana.silva@email.com")
+                .password("Password@123")
+                .documentNumber("11144477735")
+                .build();
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        String filterPayload = "{}";
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filterPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    @Order(21)
+    @SneakyThrows
+    void givenNameFilterWhenSearchThenReturnFilteredAssociates() {
+        AssociateInputDTO createDTO1 = AssociateInputDTO.builder()
+                .name("Ana Beatriz")
+                .email("ana.beatriz@email.com")
+                .password("Password@123")
+                .documentNumber("06738010044")
+                .build();
+
+        AssociateInputDTO createDTO2 = AssociateInputDTO.builder()
+                .name("Bruno Carlos")
+                .email("bruno.carlos@email.com")
+                .password("Password@123")
+                .documentNumber("12345678909")
+                .build();
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO1))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO2))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        String filterPayload = "{\"name\":\"Ana\"}";
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filterPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].name").value("Ana Beatriz"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @Order(22)
+    @SneakyThrows
+    void givenEmailFilterWhenSearchThenReturnFilteredAssociates() {
+        AssociateInputDTO createDTO = AssociateInputDTO.builder()
+                .name("Carlos Eduardo")
+                .email("carlos.edu@email.com")
+                .password("Password@123")
+                .documentNumber("98765432100")
+                .build();
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        String filterPayload = "{\"email\":\"carlos.edu@email.com\"}";
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filterPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].email").value("carlos.edu@email.com"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @Order(23)
+    @SneakyThrows
+    void givenDocumentNumberFilterWhenSearchThenReturnFilteredAssociates() {
+        AssociateInputDTO createDTO = AssociateInputDTO.builder()
+                .name("Diana Ferreira")
+                .email("diana.ferreira@email.com")
+                .password("Password@123")
+                .documentNumber("48198279016")
+                .build();
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        String filterPayload = "{\"documentNumber\":\"48198279016\"}";
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filterPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].documentNumber").value("481.982.790-16"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @Order(24)
+    @SneakyThrows
+    void givenMultipleFiltersWhenSearchThenReturnFilteredAssociates() {
+        AssociateInputDTO createDTO = AssociateInputDTO.builder()
+                .name("Eliana Costa")
+                .email("eliana.costa@email.com")
+                .password("Password@123")
+                .documentNumber("90253184010")
+                .build();
+
+        MvcResult createResult = mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseBody = createResult.getResponse().getContentAsString();
+        String associateId = objectMapper.readTree(responseBody).get("id").asString();
+
+        String filterPayload = "{\"associateId\":\"" + associateId + "\",\"name\":\"Eliana\",\"email\":\"eliana.costa@email.com\",\"documentNumber\":\"90253184010\"}";
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filterPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].name").value("Eliana Costa"))
+                .andExpect(jsonPath("$.content[0].email").value("eliana.costa@email.com"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @Order(25)
+    @SneakyThrows
+    void givenNoResultsWhenSearchThenReturnEmptyPage() {
+        String filterPayload = "{\"name\":\"NonexistentAssociate\"}";
+
+        mockMvc.perform(post(URL + "/search?page=0&size=10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filterPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
+    }
 }

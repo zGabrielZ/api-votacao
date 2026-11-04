@@ -5,7 +5,9 @@ import br.com.gabrielferreira.votacao.domain.exceptions.AssociateNotFoundExcepti
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
 import br.com.gabrielferreira.votacao.domain.exceptions.EntityInUseException;
 import br.com.gabrielferreira.votacao.domain.repositories.AssociateRepository;
+import br.com.gabrielferreira.votacao.domain.repositories.filter.associate.AssociateFilter;
 import br.com.gabrielferreira.votacao.domain.repositories.projection.AssociateDuplicateCheck;
+import br.com.gabrielferreira.votacao.domain.specs.AssociateSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -17,7 +19,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -259,5 +265,74 @@ class AssociateServiceTest {
         assertEquals("Cannot delete associate because it is in use", ex.getMessage());
         verify(repository).findByIdExternalUuid(associateId);
         verify(repository).delete(associateEntity);
+    }
+
+    @Test
+    @Order(12)
+    void givenNoFiltersWhenFindAllThenReturnAllAssociates() {
+        AssociateEntity associate2 = AssociateEntity.builder()
+                .id(2L)
+                .idExternalUuid(UUID.fromString("44444444-4444-4444-8444-444444444444"))
+                .name("João Silva")
+                .email("joao@email.com")
+                .password("123456")
+                .documentNumber("44444444444")
+                .build();
+
+        List<AssociateEntity> associates = List.of(associateEntity, associate2);
+        Page<AssociateEntity> page = new PageImpl<>(associates);
+
+        AssociateFilter filter = AssociateFilter.builder().build();
+        when(repository.findAll(any(AssociateSpec.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        Page<AssociateEntity> result = service.findAll(filter, Pageable.unpaged());
+
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        verify(repository).findAll(any(AssociateSpec.class), any(Pageable.class));
+    }
+
+    @Test
+    @Order(13)
+    void givenNameFilterWhenFindAllThenReturnFilteredAssociates() {
+        List<AssociateEntity> associates = List.of(associateEntity);
+        Page<AssociateEntity> page = new PageImpl<>(associates);
+
+        AssociateFilter filter = AssociateFilter.builder()
+                .name("Ana")
+                .build();
+
+        when(repository.findAll(any(AssociateSpec.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        Page<AssociateEntity> result = service.findAll(filter, Pageable.unpaged());
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(repository).findAll(any(AssociateSpec.class), any(Pageable.class));
+    }
+
+    @Test
+    @Order(14)
+    void givenMultipleFiltersWhenFindAllThenReturnFilteredAssociates() {
+        List<AssociateEntity> associates = List.of(associateEntity);
+        Page<AssociateEntity> page = new PageImpl<>(associates);
+
+        AssociateFilter filter = AssociateFilter.builder()
+                .associateId(associateId)
+                .name("Ana")
+                .email("ana@email.com")
+                .documentNumber("33333333333")
+                .build();
+
+        when(repository.findAll(any(AssociateSpec.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        Page<AssociateEntity> result = service.findAll(filter, Pageable.unpaged());
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(repository).findAll(any(AssociateSpec.class), any(Pageable.class));
     }
 }

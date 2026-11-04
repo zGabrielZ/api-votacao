@@ -1,11 +1,15 @@
 package br.com.gabrielferreira.votacao.api.controllers;
 
+import br.com.gabrielferreira.votacao.api.dtos.filter.AssociateFilterDTO;
 import br.com.gabrielferreira.votacao.api.dtos.input.AssociateInputDTO;
 import br.com.gabrielferreira.votacao.api.dtos.input.UpdateAssociateInputDTO;
 import br.com.gabrielferreira.votacao.api.dtos.output.AssociateOutputDTO;
+import br.com.gabrielferreira.votacao.api.dtos.output.page.PageResponse;
 import br.com.gabrielferreira.votacao.api.mappers.associate.input.AssociateInputMapper;
 import br.com.gabrielferreira.votacao.api.mappers.associate.output.AssociateOutputMapper;
+import br.com.gabrielferreira.votacao.core.utils.PageTranslate;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
+import br.com.gabrielferreira.votacao.domain.repositories.filter.associate.AssociateFilter;
 import br.com.gabrielferreira.votacao.domain.services.AssociateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +17,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -102,5 +111,26 @@ public class AssociateController {
     ) {
         associateService.delete(associateId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Search associates with filters")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Associates found successfully"
+            )
+    })
+    @PostMapping("/search")
+    public ResponseEntity<PageResponse<AssociateOutputDTO>> search(
+            @ParameterObject @PageableDefault(size = 5, sort = "name", direction = Sort.Direction.ASC)
+            Pageable pageable,
+            @Valid @RequestBody AssociateFilterDTO filter
+    ) {
+        pageable = PageTranslate.toPageable(pageable, PageTranslate.getAssociatePageableFieldsMapping());
+        AssociateFilter associateFilter = associateInputMapper.toAssociateFilter(filter);
+        Page<AssociateEntity> associates = associateService.findAll(associateFilter, pageable);
+
+        PageResponse<AssociateOutputDTO> pageResponse = associateOutputMapper.toPageDto(associates);
+        return ResponseEntity.ok(pageResponse);
     }
 }
