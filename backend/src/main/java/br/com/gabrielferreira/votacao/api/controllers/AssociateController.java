@@ -1,6 +1,7 @@
 package br.com.gabrielferreira.votacao.api.controllers;
 
 import br.com.gabrielferreira.votacao.api.dtos.input.AssociateInputDTO;
+import br.com.gabrielferreira.votacao.api.dtos.input.UpdateAssociateInputDTO;
 import br.com.gabrielferreira.votacao.api.dtos.output.AssociateOutputDTO;
 import br.com.gabrielferreira.votacao.api.mappers.associate.input.AssociateInputMapper;
 import br.com.gabrielferreira.votacao.api.mappers.associate.output.AssociateOutputMapper;
@@ -14,9 +15,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,5 +69,38 @@ public class AssociateController {
         AssociateEntity associateEntity = associateService.findById(associateId);
         AssociateOutputDTO associateOutputDto = associateOutputMapper.toAssociateOutputDTO(associateEntity);
         return ResponseEntity.ok(associateOutputDto);
+    }
+
+    @Operation(summary = "Update an associate")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Associate updated successfully"
+            )
+    })
+    @PutMapping("/{associateId}")
+    public ResponseEntity<AssociateOutputDTO> update(
+            @PathVariable UUID associateId,
+            @Valid @RequestBody UpdateAssociateInputDTO updateAssociateInputDTO
+    ) {
+        AssociateEntity associateEntity = associateInputMapper.toAssociateEntity(updateAssociateInputDTO);
+        associateEntity = associateService.update(associateId, associateEntity);
+        AssociateOutputDTO associateOutputDto = associateOutputMapper.toAssociateOutputDTO(associateEntity);
+        return ResponseEntity.ok(associateOutputDto);
+    }
+
+    @Operation(summary = "Delete an associate")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Associate deleted successfully"
+            )
+    })
+    @DeleteMapping("/{associateId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID associateId
+    ) {
+        associateService.delete(associateId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -5,9 +5,11 @@ import br.com.gabrielferreira.votacao.api.exceptions.dtos.ProblemDetailFieldDTO;
 import br.com.gabrielferreira.votacao.api.exceptions.enums.ProblemDetailType;
 import br.com.gabrielferreira.votacao.api.exceptions.mappers.ProblemDetailMapper;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
+import br.com.gabrielferreira.votacao.domain.exceptions.EntityInUseException;
 import br.com.gabrielferreira.votacao.domain.exceptions.EntityNotFoundException;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +46,6 @@ import java.util.Locale;
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final String GENERIC_USER_MESSAGE = "An unexpected internal system error has occurred. Please try again and if the problem persists, contact the system administrator.";
-    private static final OffsetDateTime NOW = OffsetDateTime.now(ZoneOffset.UTC);
 
     private final MessageSource messageSource;
 
@@ -93,6 +94,9 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             description = "Bad Request",
             content = @Content(
                     mediaType = "application/json",
+                    schema = @Schema(
+                            implementation = ProblemDetailDTO.class
+                    ),
                     examples = {
                             @ExampleObject(
                                     name = "Business Rule Violation",
@@ -102,6 +106,18 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                                               "title": "Business Rule Violation",
                                               "detail": "The operation cannot be completed due to business rule violation.",
                                               "message": "The operation cannot be completed due to business rule violation.",
+                                              "timestamp": "2024-06-01T12:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "Entity In Use",
+                                    value = """
+                                            {
+                                              "status": 400,
+                                              "title": "Entity In Use",
+                                              "detail": "The entity you are trying to delete is currently in use and cannot be removed.",
+                                              "message": "The entity you are trying to delete is currently in use and cannot be removed.",
                                               "timestamp": "2024-06-01T12:00:00Z"
                                             }
                                             """
@@ -285,14 +301,27 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
     }
 
+    @ExceptionHandler(EntityInUseException.class)
+    public ResponseEntity<Object> handleEntityInUseException(EntityInUseException ex, WebRequest request) {
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        ProblemDetailType problemDetailType = ProblemDetailType.ENTITY_IN_USE;
+        ProblemDetailDTO problemDetailDto = createProblemDetailDto(
+                httpStatus,
+                problemDetailType,
+                ex.getMessage(),
+                null
+        );
+        return handleExceptionInternal(ex, problemDetailDto, new HttpHeaders(), httpStatus, request);
+    }
+
     private ProblemDetailDTO createProblemDetailDto(HttpStatus httpStatus, ProblemDetailType problemDetailType,
-                                                                                        String detail,  List<ProblemDetailFieldDTO> fields) {
+                                                    String detail, List<ProblemDetailFieldDTO> fields) {
         return problemDetailMapper.toProblemDetailDto(
                 httpStatus.value(),
                 problemDetailType.getTitle(),
                 detail,
                 problemDetailType.getMessage(),
-                NOW,
+                OffsetDateTime.now(ZoneOffset.UTC),
                 fields
         );
     }

@@ -1,6 +1,7 @@
 package br.com.gabrielferreira.votacao.api.mappers.associate.input;
 
 import br.com.gabrielferreira.votacao.api.dtos.input.AssociateInputDTO;
+import br.com.gabrielferreira.votacao.api.dtos.input.UpdateAssociateInputDTO;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -34,5 +35,22 @@ class AssociateInputMapperTest {
         assertEquals(dto.email(), result.getEmail());
         assertEquals(dto.password(), result.getPassword());
         assertEquals("06738010044", result.getDocumentNumber());
+    }
+
+    @Test
+    @Order(2)
+    void givenUpdateAssociateInputDTOWhenToEntityThenReturnAssociateEntity() {
+        UpdateAssociateInputDTO dto = UpdateAssociateInputDTO.builder()
+                .name("Ana Costa")
+                .email("ana.costa@email.com")
+                .password("Password@123")
+                .build();
+
+        AssociateEntity result = mapper.toAssociateEntity(dto);
+
+        assertNotNull(result);
+        assertEquals(dto.name(), result.getName());
+        assertEquals(dto.email(), result.getEmail());
+        assertEquals(dto.password(), result.getPassword());
     }
 }

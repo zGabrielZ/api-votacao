@@ -10,7 +10,8 @@ public enum ProblemDetailType {
     BUSINESS_RULE_VIOLATION("Business Rule Violation", "business-rule-violation", "A business rule has been violated."),
     RESOURCE_NOT_FOUND("Resource Not Found", "resource-not-found", "The requested resource could not be found."),
     INVALID_DATA("Invalid Data", "invalid-data", "One or more fields are invalid. Please correct them and try again."),
-    INVALID_PARAMETER("Invalid Parameter", "invalid-parameter", "One or more request parameters are invalid.");
+    INVALID_PARAMETER("Invalid Parameter", "invalid-parameter", "One or more request parameters are invalid."),
+    ENTITY_IN_USE("Entity In Use", "entity-in-use", "The entity is currently in use and cannot be modified or deleted.");
 
     private final String title;
     private final String uri;

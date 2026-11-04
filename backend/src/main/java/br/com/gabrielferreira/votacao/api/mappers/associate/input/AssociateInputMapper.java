@@ -1,6 +1,7 @@
 package br.com.gabrielferreira.votacao.api.mappers.associate.input;
 
 import br.com.gabrielferreira.votacao.api.dtos.input.AssociateInputDTO;
+import br.com.gabrielferreira.votacao.api.dtos.input.UpdateAssociateInputDTO;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,6 +15,8 @@ public interface AssociateInputMapper {
 
     @Mapping(target = "documentNumber", expression = "java(cleanDocumentNumber(associateInputDto.documentNumber()))")
     AssociateEntity toAssociateEntity(AssociateInputDTO associateInputDto);
+
+    AssociateEntity toAssociateEntity(UpdateAssociateInputDTO updateAssociateInputDTO);
 
     @Named("cleanDocumentNumber")
     default String cleanDocumentNumber(String documentNumber) {

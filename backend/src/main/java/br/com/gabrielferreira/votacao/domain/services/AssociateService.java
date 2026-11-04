@@ -3,10 +3,12 @@ package br.com.gabrielferreira.votacao.domain.services;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import br.com.gabrielferreira.votacao.domain.exceptions.AssociateNotFoundException;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
+import br.com.gabrielferreira.votacao.domain.exceptions.EntityInUseException;
 import br.com.gabrielferreira.votacao.domain.repositories.AssociateRepository;
 import br.com.gabrielferreira.votacao.domain.repositories.projection.AssociateDuplicateCheck;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,38 @@ public class AssociateService {
                 .orElseThrow(() -> new AssociateNotFoundException(id));
         log.info("Found associate : {}", associateEntity);
         return associateEntity;
+    }
+
+    @Transactional
+    public AssociateEntity update(UUID id, AssociateEntity associateEntity) {
+        log.info("Request to update associate with id : {}", id);
+        AssociateEntity existingAssociate = findById(id);
+
+        if (!existingAssociate.getEmail().equals(associateEntity.getEmail())) {
+            validateDuplicateEmail(associateEntity.getEmail());
+        }
+
+        existingAssociate.setName(associateEntity.getName());
+        existingAssociate.setEmail(associateEntity.getEmail());
+        existingAssociate.setPassword(associateEntity.getPassword());
+        existingAssociate = repository.save(existingAssociate);
+        log.info("Updated associate : {}", existingAssociate);
+        return existingAssociate;
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        log.info("Request to delete associate with id : {}", id);
+        AssociateEntity associateEntity = findById(id);
+
+        try {
+            repository.delete(associateEntity);
+            repository.flush();
+            log.info("Deleted associate with id : {}", id);
+        } catch (DataIntegrityViolationException ex) {
+            log.error("Associate with id : {} is in use", id);
+            throw new EntityInUseException("Cannot delete associate because it is in use");
+        }
     }
 
     private void validateDuplicateDocumentNumber(String documentNumber) {
