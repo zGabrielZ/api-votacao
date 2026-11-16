@@ -2,6 +2,7 @@ package br.com.gabrielferreira.votacao.domain.specs;
 
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import br.com.gabrielferreira.votacao.domain.repositories.filter.associate.AssociateFilter;
+import br.com.gabrielferreira.votacao.utils.DocumentUtils;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -145,33 +146,35 @@ class AssociateSpecTest {
     @Test
     @Order(5)
     void givenDocumentNumberFilterWhenToPredicateThenCreateEqualPredicate() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateFilter filter = AssociateFilter.builder()
-                .documentNumber("12345678900")
+                .documentNumber(documentNumber)
                 .build();
         AssociateSpec spec = new AssociateSpec(filter);
 
         @SuppressWarnings("unchecked")
         Path<String> path = mock(Path.class);
         doReturn(path).when(root).get("documentNumber");
-        when(criteriaBuilder.equal(path, "12345678900")).thenReturn(mockPredicate);
+        when(criteriaBuilder.equal(path, documentNumber)).thenReturn(mockPredicate);
         when(criteriaBuilder.and(any(Predicate[].class))).thenReturn(mockPredicate);
 
         Predicate result = spec.toPredicate(root, query, criteriaBuilder);
 
         assertNotNull(result);
         verify(root).get("documentNumber");
-        verify(criteriaBuilder).equal(path, "12345678900");
+        verify(criteriaBuilder).equal(path, documentNumber);
     }
 
     @Test
     @Order(6)
     void givenMultipleFiltersWhenToPredicateThenCombineWithAnd() {
         UUID associateId = UUID.randomUUID();
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateFilter filter = AssociateFilter.builder()
                 .associateId(associateId)
                 .name("John")
                 .email("john@email.com")
-                .documentNumber("12345678900")
+                .documentNumber(documentNumber)
                 .build();
         AssociateSpec spec = new AssociateSpec(filter);
 
@@ -198,7 +201,7 @@ class AssociateSpecTest {
         when(criteriaBuilder.like(lowerNameExpression, "%john%")).thenReturn(mockPredicate);
         when(criteriaBuilder.lower(emailPath)).thenReturn(lowerEmailExpression);
         when(criteriaBuilder.like(lowerEmailExpression, "%john@email.com%")).thenReturn(mockPredicate);
-        when(criteriaBuilder.equal(documentNumberPath, "12345678900")).thenReturn(mockPredicate);
+        when(criteriaBuilder.equal(documentNumberPath, documentNumber)).thenReturn(mockPredicate);
         when(criteriaBuilder.and(any(Predicate[].class))).thenReturn(mockPredicate);
 
         Predicate result = spec.toPredicate(root, query, criteriaBuilder);

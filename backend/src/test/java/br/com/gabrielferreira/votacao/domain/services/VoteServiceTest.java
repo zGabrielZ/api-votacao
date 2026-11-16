@@ -9,6 +9,7 @@ import br.com.gabrielferreira.votacao.domain.enums.VotingSessionStatus;
 import br.com.gabrielferreira.votacao.domain.exceptions.AssociateNotFoundException;
 import br.com.gabrielferreira.votacao.domain.exceptions.BusinessException;
 import br.com.gabrielferreira.votacao.domain.repositories.VoteRepository;
+import br.com.gabrielferreira.votacao.utils.DocumentUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -71,7 +72,7 @@ class VoteServiceTest {
                 .name("Maria Silva")
                 .email("maria@email.com")
                 .password("123456")
-                .documentNumber("11111111111")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         voteEntity = VoteEntity.builder()

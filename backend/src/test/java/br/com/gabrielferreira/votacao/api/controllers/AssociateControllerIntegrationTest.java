@@ -2,6 +2,7 @@ package br.com.gabrielferreira.votacao.api.controllers;
 
 import br.com.gabrielferreira.votacao.api.dtos.input.AssociateInputDTO;
 import br.com.gabrielferreira.votacao.api.dtos.input.UpdateAssociateInputDTO;
+import br.com.gabrielferreira.votacao.utils.DocumentUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,11 +55,12 @@ class AssociateControllerIntegrationTest {
     @Order(1)
     @SneakyThrows
     void givenValidInputWhenPostThenReturnCreated() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO inputDTO = AssociateInputDTO.builder()
                 .name("Ana Costa")
                 .email("ana.costa@email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         String payload = objectMapper.writeValueAsString(inputDTO);
@@ -71,18 +73,19 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.name").value("Ana Costa"))
                 .andExpect(jsonPath("$.email").value("ana.costa@email.com"))
-                .andExpect(jsonPath("$.documentNumber").value("067.380.100-44"));
+                .andExpect(jsonPath("$.documentNumber").value(formatDocumentNumber(documentNumber)));
     }
 
     @Test
     @Order(2)
     @SneakyThrows
     void givenNameLengthOutOfRangeWhenPostThenReturnBadRequest() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO inputDTO = AssociateInputDTO.builder()
                 .name("A".repeat(256))
                 .email("valid@email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         String payload = objectMapper.writeValueAsString(inputDTO);
@@ -100,11 +103,12 @@ class AssociateControllerIntegrationTest {
     @Order(3)
     @SneakyThrows
     void givenInvalidEmailWhenPostThenReturnBadRequest() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO inputDTO = AssociateInputDTO.builder()
                 .name("Maria Souza")
                 .email("maria.email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         String payload = objectMapper.writeValueAsString(inputDTO);
@@ -122,11 +126,12 @@ class AssociateControllerIntegrationTest {
     @Order(4)
     @SneakyThrows
     void givenPasswordLengthOutOfRangeWhenPostThenReturnBadRequest() {
+        String  documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO inputDTO = AssociateInputDTO.builder()
                 .name("Maria Souza")
                 .email("maria@email.com")
                 .password("A".repeat(256))
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         String payload = objectMapper.writeValueAsString(inputDTO);
@@ -144,11 +149,12 @@ class AssociateControllerIntegrationTest {
     @Order(5)
     @SneakyThrows
     void givenWeakPasswordWhenPostThenReturnBadRequest() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO inputDTO = AssociateInputDTO.builder()
                 .name("Maria Souza")
                 .email("maria@email.com")
                 .password("password123")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         String payload = objectMapper.writeValueAsString(inputDTO);
@@ -206,7 +212,7 @@ class AssociateControllerIntegrationTest {
                 .name("Ana Costa")
                 .email("duplicate@email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -219,7 +225,7 @@ class AssociateControllerIntegrationTest {
                 .name("Beatriz Rocha")
                 .email("duplicate@email.com")
                 .password("Password@123")
-                .documentNumber("12345678909")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -235,11 +241,12 @@ class AssociateControllerIntegrationTest {
     @Order(9)
     @SneakyThrows
     void givenExistingDocumentNumberWhenPostThenReturnBadRequest() {
+        String documentNumber =  DocumentUtils.generateCpf();
         AssociateInputDTO firstPayload = AssociateInputDTO.builder()
                 .name("Ana Costa")
                 .email("document@email.com")
                 .password("Password@123")
-                .documentNumber("11144477735")
+                .documentNumber(documentNumber)
                 .build();
 
         mockMvc.perform(post(URL)
@@ -252,7 +259,7 @@ class AssociateControllerIntegrationTest {
                 .name("Beatriz Rocha")
                 .email("another@email.com")
                 .password("Password@123")
-                .documentNumber("11144477735")
+                .documentNumber(documentNumber)
                 .build();
 
         mockMvc.perform(post(URL)
@@ -268,11 +275,12 @@ class AssociateControllerIntegrationTest {
     @Order(10)
     @SneakyThrows
     void givenExistingAssociateWhenGetByIdThenReturnOk() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO inputDTO = AssociateInputDTO.builder()
                 .name("João Silva")
                 .email("joao@email.com")
                 .password("Password@123")
-                .documentNumber("12345678909")
+                .documentNumber(documentNumber)
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -292,7 +300,7 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").value(associateIdStr))
                 .andExpect(jsonPath("$.name").value("João Silva"))
                 .andExpect(jsonPath("$.email").value("joao@email.com"))
-                .andExpect(jsonPath("$.documentNumber").value("123.456.789-09"));
+                .andExpect(jsonPath("$.documentNumber").value(formatDocumentNumber(documentNumber)));
     }
 
     @Test
@@ -312,11 +320,12 @@ class AssociateControllerIntegrationTest {
     @Order(12)
     @SneakyThrows
     void givenValidInputWhenPutThenReturnOk() {
+        String documentNumber =  DocumentUtils.generateCpf();
         AssociateInputDTO createDTO = AssociateInputDTO.builder()
                 .name("João Silva")
                 .email("joao@email.com")
                 .password("Password@123")
-                .documentNumber("98765432100")
+                .documentNumber(documentNumber)
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -344,7 +353,7 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").value(associateIdStr))
                 .andExpect(jsonPath("$.name").value("João Silva Updated"))
                 .andExpect(jsonPath("$.email").value("joao.updated@email.com"))
-                .andExpect(jsonPath("$.documentNumber").value("987.654.321-00"));
+                .andExpect(jsonPath("$.documentNumber").value(formatDocumentNumber(documentNumber)));
     }
 
     @Test
@@ -355,7 +364,7 @@ class AssociateControllerIntegrationTest {
                 .name("Maria Teste")
                 .email("maria123@email.com")
                 .password("Password@123")
-                .documentNumber("89034497038")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -392,7 +401,7 @@ class AssociateControllerIntegrationTest {
                 .name("Pedro Teste")
                 .email("pedro@email.com")
                 .password("Password@123")
-                .documentNumber("95006437073")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -429,7 +438,7 @@ class AssociateControllerIntegrationTest {
                 .name("Carlos Teste")
                 .email("carlos@email.com")
                 .password("Password@123")
-                .documentNumber("16314457076")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -442,7 +451,7 @@ class AssociateControllerIntegrationTest {
                 .name("Lucas Teste")
                 .email("lucas@email.com")
                 .password("Password@123")
-                .documentNumber("53289565084")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -500,7 +509,7 @@ class AssociateControllerIntegrationTest {
                 .name("Roberto Teste")
                 .email("roberto@email.com")
                 .password("Password@123")
-                .documentNumber("33323672003")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -555,7 +564,7 @@ class AssociateControllerIntegrationTest {
                 .name("Ana Silva")
                 .email("ana.silva@email.com")
                 .password("Password@123")
-                .documentNumber("11144477735")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -586,14 +595,14 @@ class AssociateControllerIntegrationTest {
                 .name("Ana Beatriz")
                 .email("ana.beatriz@email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         AssociateInputDTO createDTO2 = AssociateInputDTO.builder()
                 .name("Bruno Carlos")
                 .email("bruno.carlos@email.com")
                 .password("Password@123")
-                .documentNumber("12345678909")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -628,7 +637,7 @@ class AssociateControllerIntegrationTest {
                 .name("Carlos Eduardo")
                 .email("carlos.edu@email.com")
                 .password("Password@123")
-                .documentNumber("98765432100")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -657,7 +666,7 @@ class AssociateControllerIntegrationTest {
                 .name("Diana Ferreira")
                 .email("diana.ferreira@email.com")
                 .password("Password@123")
-                .documentNumber("48198279016")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         mockMvc.perform(post(URL)
@@ -666,7 +675,7 @@ class AssociateControllerIntegrationTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        String filterPayload = "{\"documentNumber\":\"48198279016\"}";
+        String filterPayload = "{\"documentNumber\":\"" + createDTO.documentNumber() + "\"}";
 
         mockMvc.perform(post(URL + "/search?page=0&size=10")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -674,7 +683,7 @@ class AssociateControllerIntegrationTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content[0].documentNumber").value("481.982.790-16"))
+                .andExpect(jsonPath("$.content[0].documentNumber").value(formatDocumentNumber(createDTO.documentNumber())))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
@@ -686,7 +695,7 @@ class AssociateControllerIntegrationTest {
                 .name("Eliana Costa")
                 .email("eliana.costa@email.com")
                 .password("Password@123")
-                .documentNumber("90253184010")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         MvcResult createResult = mockMvc.perform(post(URL)
@@ -699,7 +708,7 @@ class AssociateControllerIntegrationTest {
         String responseBody = createResult.getResponse().getContentAsString();
         String associateId = objectMapper.readTree(responseBody).get("id").asString();
 
-        String filterPayload = "{\"associateId\":\"" + associateId + "\",\"name\":\"Eliana\",\"email\":\"eliana.costa@email.com\",\"documentNumber\":\"90253184010\"}";
+        String filterPayload = "{\"associateId\":\"" + associateId + "\",\"name\":\"Eliana\",\"email\":\"eliana.costa@email.com\",\"documentNumber\":\"" + createDTO.documentNumber() + "\"}";
 
         mockMvc.perform(post(URL + "/search?page=0&size=10")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -788,5 +797,9 @@ class AssociateControllerIntegrationTest {
                 .andExpect(jsonPath("$.detail").value(
                         "The property 'unknownProperty' does not exist. Correct or remove this property and try again."
                 ));
+    }
+
+    private String formatDocumentNumber(String documentNumber) {
+        return documentNumber.replaceFirst("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
     }
 }

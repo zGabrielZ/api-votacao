@@ -3,6 +3,7 @@ package br.com.gabrielferreira.votacao.api.mappers.associate.output;
 import br.com.gabrielferreira.votacao.api.dtos.output.AssociateOutputDTO;
 import br.com.gabrielferreira.votacao.api.dtos.output.page.PageResponse;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
+import br.com.gabrielferreira.votacao.utils.DocumentUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -28,13 +29,14 @@ class AssociateOutputMapperTest {
     @Order(1)
     void givenAssociateEntityWhenToDtoThenReturnAssociateOutputDTO() {
         UUID externalId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateEntity entity = AssociateEntity.builder()
                 .id(1L)
                 .idExternalUuid(externalId)
                 .name("Ana Costa")
                 .email("ana.costa@email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         AssociateOutputDTO dto = mapper.toAssociateOutputDTO(entity);
@@ -43,20 +45,21 @@ class AssociateOutputMapperTest {
         assertEquals(externalId, dto.id());
         assertEquals(entity.getName(), dto.name());
         assertEquals(entity.getEmail(), dto.email());
-        assertEquals("067.380.100-44", dto.documentNumber());
+        assertEquals(mapper.formatDocumentNumber(documentNumber), dto.documentNumber());
     }
 
     @Test
     @Order(2)
     void givenPageOfAssociatesWhenToPageDtoThenReturnPageResponse() {
         UUID externalId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateEntity entity = AssociateEntity.builder()
                 .id(1L)
                 .idExternalUuid(externalId)
                 .name("Ana Costa")
                 .email("ana.costa@email.com")
                 .password("Password@123")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
         Page<AssociateEntity> page = new PageImpl<>(
                 List.of(entity),
@@ -71,7 +74,7 @@ class AssociateOutputMapperTest {
         assertEquals(externalId, result.getContent().get(0).id());
         assertEquals("Ana Costa", result.getContent().get(0).name());
         assertEquals("ana.costa@email.com", result.getContent().get(0).email());
-        assertEquals("067.380.100-44", result.getContent().get(0).documentNumber());
+        assertEquals(mapper.formatDocumentNumber(documentNumber), result.getContent().get(0).documentNumber());
         assertEquals(5L, result.getSize());
         assertEquals(6L, result.getTotalElements());
         assertEquals(2L, result.getTotalPages());

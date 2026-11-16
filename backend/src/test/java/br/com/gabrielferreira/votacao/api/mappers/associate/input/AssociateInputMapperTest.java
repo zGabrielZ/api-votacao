@@ -5,6 +5,7 @@ import br.com.gabrielferreira.votacao.api.dtos.input.AssociateInputDTO;
 import br.com.gabrielferreira.votacao.api.dtos.input.UpdateAssociateInputDTO;
 import br.com.gabrielferreira.votacao.domain.entities.AssociateEntity;
 import br.com.gabrielferreira.votacao.domain.repositories.filter.associate.AssociateFilter;
+import br.com.gabrielferreira.votacao.utils.DocumentUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -26,11 +27,12 @@ class AssociateInputMapperTest {
     @Test
     @Order(1)
     void givenAssociateInputDTOWhenToEntityThenReturnAssociateEntity() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateInputDTO dto = AssociateInputDTO.builder()
                 .name("Ana Costa")
                 .email("ana.costa@email.com")
                 .password("Password@123")
-                .documentNumber("067.380.100-44")
+                .documentNumber(documentNumber)
                 .build();
 
         AssociateEntity result = mapper.toAssociateEntity(dto);
@@ -39,7 +41,7 @@ class AssociateInputMapperTest {
         assertEquals(dto.name(), result.getName());
         assertEquals(dto.email(), result.getEmail());
         assertEquals(dto.password(), result.getPassword());
-        assertEquals("06738010044", result.getDocumentNumber());
+        assertEquals(documentNumber, result.getDocumentNumber());
     }
 
     @Test
@@ -63,11 +65,12 @@ class AssociateInputMapperTest {
     @Order(3)
     void givenAssociateFilterDTOWhenToAssociateFilterThenReturnAssociateFilter() {
         UUID associateId = UUID.randomUUID();
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateFilterDTO dto = AssociateFilterDTO.builder()
                 .associateId(associateId)
                 .name("Ana Costa")
                 .email("ana.costa@email.com")
-                .documentNumber("06738010044")
+                .documentNumber(documentNumber)
                 .build();
 
         AssociateFilter result = mapper.toAssociateFilter(dto);
@@ -76,7 +79,7 @@ class AssociateInputMapperTest {
         assertEquals(associateId, result.associateId());
         assertEquals("Ana Costa", result.name());
         assertEquals("ana.costa@email.com", result.email());
-        assertEquals("06738010044", result.documentNumber());
+        assertEquals(documentNumber, result.documentNumber());
     }
 
     @Test

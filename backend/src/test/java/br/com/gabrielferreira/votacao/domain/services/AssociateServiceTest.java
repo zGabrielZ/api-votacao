@@ -8,6 +8,7 @@ import br.com.gabrielferreira.votacao.domain.repositories.AssociateRepository;
 import br.com.gabrielferreira.votacao.domain.repositories.filter.associate.AssociateFilter;
 import br.com.gabrielferreira.votacao.domain.repositories.projection.AssociateDuplicateCheck;
 import br.com.gabrielferreira.votacao.domain.specs.AssociateSpec;
+import br.com.gabrielferreira.votacao.utils.DocumentUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -59,7 +60,7 @@ class AssociateServiceTest {
                 .name("Ana Costa")
                 .email("ana@email.com")
                 .password("123456")
-                .documentNumber("33333333333")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
     }
 
@@ -92,15 +93,16 @@ class AssociateServiceTest {
     @Test
     @Order(3)
     void givenNoDuplicateDataWhenCreateThenReturnSavedAssociate() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateEntity newAssociate = AssociateEntity.builder()
                 .name("Maria Souza")
                 .email("maria@email.com")
                 .password("Password@123")
-                .documentNumber("12345678909")
+                .documentNumber(documentNumber)
                 .build();
 
         AssociateDuplicateCheck emptyCheck = () -> 0L;
-        when(repository.existsDocumentNumber("12345678909")).thenReturn(emptyCheck);
+        when(repository.existsDocumentNumber(documentNumber)).thenReturn(emptyCheck);
         when(repository.existsEmail("maria@email.com")).thenReturn(emptyCheck);
         when(repository.save(any(AssociateEntity.class))).thenAnswer(invocation -> {
             AssociateEntity entity = invocation.getArgument(0);
@@ -114,8 +116,8 @@ class AssociateServiceTest {
         assertNotNull(saved);
         assertEquals("Maria Souza", saved.getName());
         assertEquals("maria@email.com", saved.getEmail());
-        assertEquals("12345678909", saved.getDocumentNumber());
-        verify(repository).existsDocumentNumber("12345678909");
+        assertEquals(documentNumber, saved.getDocumentNumber());
+        verify(repository).existsDocumentNumber(documentNumber);
         verify(repository).existsEmail("maria@email.com");
         verify(repository).save(any(AssociateEntity.class));
     }
@@ -123,41 +125,43 @@ class AssociateServiceTest {
     @Test
     @Order(4)
     void givenExistingDocumentNumberWhenCreateThenThrowBusinessException() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateEntity newAssociate = AssociateEntity.builder()
                 .name("Maria Souza")
                 .email("maria@email.com")
                 .password("Password@123")
-                .documentNumber("12345678909")
+                .documentNumber(documentNumber)
                 .build();
 
         AssociateDuplicateCheck duplicateCheck = () -> 1L;
-        when(repository.existsDocumentNumber("12345678909")).thenReturn(duplicateCheck);
+        when(repository.existsDocumentNumber(documentNumber)).thenReturn(duplicateCheck);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> service.create(newAssociate));
 
         assertEquals("Associate with this document number already exists", exception.getMessage());
-        verify(repository).existsDocumentNumber("12345678909");
+        verify(repository).existsDocumentNumber(documentNumber);
     }
 
     @Test
     @Order(5)
     void givenExistingEmailWhenCreateThenThrowBusinessException() {
+        String documentNumber = DocumentUtils.generateCpf();
         AssociateEntity newAssociate = AssociateEntity.builder()
                 .name("Maria Souza")
                 .email("maria@email.com")
                 .password("Password@123")
-                .documentNumber("12345678909")
+                .documentNumber(documentNumber)
                 .build();
 
         AssociateDuplicateCheck emptyCheck = () -> 0L;
         AssociateDuplicateCheck duplicateCheck = () -> 1L;
-        when(repository.existsDocumentNumber("12345678909")).thenReturn(emptyCheck);
+        when(repository.existsDocumentNumber(documentNumber)).thenReturn(emptyCheck);
         when(repository.existsEmail("maria@email.com")).thenReturn(duplicateCheck);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> service.create(newAssociate));
 
         assertEquals("Associate with this email already exists", exception.getMessage());
-        verify(repository).existsDocumentNumber("12345678909");
+        verify(repository).existsDocumentNumber(documentNumber);
         verify(repository).existsEmail("maria@email.com");
     }
 
@@ -168,7 +172,7 @@ class AssociateServiceTest {
                 .name("Updated Name")
                 .email("updated@email.com")
                 .password("UpdatedPassword@123")
-                .documentNumber("33333333333")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         AssociateDuplicateCheck emptyCheck = () -> 0L;
@@ -194,7 +198,7 @@ class AssociateServiceTest {
                 .name("Updated Name")
                 .email("ana@email.com")
                 .password("UpdatedPassword@123")
-                .documentNumber("33333333333")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         when(repository.findByIdExternalUuid(associateId)).thenReturn(Optional.of(associateEntity));
@@ -216,7 +220,7 @@ class AssociateServiceTest {
                 .name("Updated Name")
                 .email("existing@email.com")
                 .password("UpdatedPassword@123")
-                .documentNumber("33333333333")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         AssociateDuplicateCheck duplicateCheck = () -> 1L;
@@ -276,7 +280,7 @@ class AssociateServiceTest {
                 .name("João Silva")
                 .email("joao@email.com")
                 .password("123456")
-                .documentNumber("44444444444")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         List<AssociateEntity> associates = List.of(associateEntity, associate2);
@@ -323,7 +327,7 @@ class AssociateServiceTest {
                 .associateId(associateId)
                 .name("Ana")
                 .email("ana@email.com")
-                .documentNumber("33333333333")
+                .documentNumber(DocumentUtils.generateCpf())
                 .build();
 
         when(repository.findAll(any(AssociateSpec.class), any(Pageable.class)))
